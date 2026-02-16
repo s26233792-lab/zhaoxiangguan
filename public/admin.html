@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - 美式照相馆</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-page">
+  <!-- 顶部导航 -->
+  <nav class="navbar">
+    <div class="container">
+      <h1 class="logo">管理后台</h1>
+      <div class="nav-right">
+        <a href="/" class="btn btn-secondary btn-small">
+          <i class="fas fa-home"></i> 返回首页
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 主内容区 -->
+  <main class="main-content admin-content">
+    <div class="container">
+      <!-- 登录区域 -->
+      <div id="login-panel" class="card login-panel">
+        <h2>管理员登录</h2>
+        <input type="password" id="admin-password" placeholder="请输入管理员密码" class="input">
+        <button id="login-btn" class="btn btn-primary btn-large">登录</button>
+      </div>
+
+      <!-- 管理面板 -->
+      <div id="admin-panel" class="hidden">
+        <!-- 统计数据 -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-ticket-alt"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-total-codes">0</span>
+              <span class="stat-label">总卡密数</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-active-codes">0</span>
+              <span class="stat-label">可用卡密</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-users">0</span>
+              <span class="stat-label">用户数</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 生成卡密 -->
+        <div class="card">
+          <h2>生成卡密</h2>
+
+          <!-- 规格列表容器 -->
+          <div id="batch-specs-container">
+            <!-- 动态添加规格项 -->
+          </div>
+
+          <button id="add-spec-btn" class="btn btn-secondary">
+            <i class="fas fa-plus"></i> 新增规格
+          </button>
+
+          <hr style="margin: 16px 0; border: none; border-top: 1px solid var(--border);">
+
+          <button id="generate-codes-btn" class="btn btn-primary btn-large">
+            <i class="fas fa-magic"></i> 生成全部
+          </button>
+        </div>
+
+        <!-- 卡密管理 -->
+        <div class="card">
+          <div class="card-header">
+            <h2>卡密管理</h2>
+            <div class="card-actions">
+              <button id="export-btn" class="btn btn-secondary">
+                <i class="fas fa-download"></i> 导出 TXT
+              </button>
+              <button id="refresh-btn" class="btn btn-secondary">
+                <i class="fas fa-sync"></i> 刷新
+              </button>
+            </div>
+          </div>
+
+          <!-- 可用卡密分区 -->
+          <div class="code-section">
+            <div class="section-header" onclick="toggleSection('active')">
+              <i class="fas fa-chevron-down section-toggle"></i>
+              <span class="section-title">可用卡密</span>
+              <span class="badge badge-success" id="active-count">0</span>
+            </div>
+            <div class="section-content" id="active-section">
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>卡密</th>
+                      <th>点数</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="active-table-body">
+                    <tr><td colspan="3" class="text-center">暂无数据</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 已使用卡密分区 -->
+          <div class="code-section">
+            <div class="section-header" onclick="toggleSection('used')">
+              <i class="fas fa-chevron-down section-toggle"></i>
+              <span class="section-title">已使用卡密</span>
+              <span class="badge badge-secondary" id="used-count">0</span>
+            </div>
+            <div class="section-content" id="used-section">
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>卡密</th>
+                      <th>点数</th>
+                      <th>使用时间</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="used-table-body">
+                    <tr><td colspan="4" class="text-center">暂无数据</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 提示消息 -->
+  <div id="status-message" class="status-message hidden">
+    <span id="status-text"></span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

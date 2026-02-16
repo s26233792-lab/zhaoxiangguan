@@ -1,0 +1,838 @@
+/* ==================== 全局样式 ==================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --secondary: #64748b;
+  --secondary-hover: #475569;
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --success: #22c55e;
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --text-light: #64748b;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--background);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ==================== 导航栏 ==================== */
+.navbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.navbar .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.credit-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #fef3c7;
+  border-radius: 20px;
+  font-weight: 600;
+  color: #d97706;
+}
+
+/* ==================== 主内容区 ==================== */
+.main-content {
+  padding: 40px 0;
+}
+
+.admin-content {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ==================== 卡片 ==================== */
+.card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.card h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ==================== 按钮 ==================== */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn-secondary {
+  background: var(--secondary);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: var(--secondary-hover);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: var(--danger-hover);
+}
+
+.btn-large {
+  padding: 14px 28px;
+  font-size: 16px;
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==================== 输入框 ==================== */
+.input, textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* ==================== 表单 ==================== */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* ==================== 上传区域 ==================== */
+.upload-wrapper {
+  cursor: pointer;
+  position: relative;
+}
+
+.upload-wrapper.drag-over {
+  background: #e0e7ff;
+  border: 2px dashed var(--primary);
+}
+
+.upload-placeholder {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-light);
+  transition: all 0.2s;
+}
+
+.upload-wrapper:hover .upload-placeholder {
+  border-color: var(--primary);
+  background: #f1f5f9;
+}
+
+.upload-placeholder i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: var(--secondary);
+}
+
+.upload-placeholder .hint {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.preview {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.preview img {
+  width: 100%;
+  border-radius: 12px;
+}
+
+.remove-btn {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==================== 加载状态 ==================== */
+.loading-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.percent-text {
+  font-weight: 600;
+  color: var(--primary);
+  min-width: 40px;
+}
+
+.loading-tip {
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+/* ==================== 结果区域 ==================== */
+.result-container {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-placeholder {
+  text-align: center;
+  color: var(--text-light);
+  padding: 40px;
+}
+
+.result-placeholder i {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+.result-image {
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+/* ==================== 模态框 ==================== */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.modal-content h3 {
+  margin-bottom: 16px;
+}
+
+.modal-content p {
+  color: var(--text-light);
+  margin-bottom: 20px;
+}
+
+.modal-content .btn {
+  margin: 8px;
+}
+
+/* ==================== 提示消息 ==================== */
+.status-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 16px 24px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  z-index: 2000;
+  animation: slideIn 0.3s;
+}
+
+.status-message.success {
+  background: var(--success);
+}
+
+.status-message.error {
+  background: var(--danger);
+}
+
+.status-message.info {
+  background: var(--primary);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ==================== 管理后台 ==================== */
+.login-panel {
+  max-width: 400px;
+  margin: 80px auto;
+  text-align: center;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #e0e7ff;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+/* ==================== 表格 ==================== */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table th {
+  font-weight: 600;
+  color: var(--text-light);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.data-table code {
+  background: var(--background);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* ==================== 徽章 ==================== */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-success {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.badge-secondary {
+  background: #f1f5f9;
+  color: var(--text-light);
+}
+
+/* ==================== 响应式 ==================== */
+@media (min-width: 768px) {
+  .left-panel, .right-panel {
+    flex: 1;
+  }
+
+  .main-content .container {
+    display: flex;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 767px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==================== 风格选项样式 ==================== */
+
+.step-badge {
+  background: var(--primary);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* 尺寸选择器 */
+.size-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.size-btn {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.size-btn span {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.size-btn small {
+  font-size: 10px;
+  color: var(--text-light);
+}
+
+.size-btn:hover {
+  border-color: var(--primary);
+  background: #f1f5f9;
+}
+
+.size-btn.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.size-btn.active span,
+.size-btn.active small {
+  color: white;
+}
+
+/* 风格区域 */
+.style-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-group > label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-light);
+}
+
+/* 选项网格 */
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.option-btn {
+  padding: 12px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+
+.option-btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+.option-btn.active {
+  background: white;
+  border-color: rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  color: var(--primary);
+}
+
+.option-btn .icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--border);
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.option-btn.active .icon-box {
+  background: var(--primary);
+  color: white;
+}
+
+.option-desc {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-left: 4px;
+}
+
+/* 服装列表 */
+.clothing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.clothing-btn {
+  padding: 12px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  text-align: left;
+}
+
+.clothing-btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+.clothing-btn.active {
+  background: white;
+  border-color: rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  color: var(--primary);
+}
+
+.clothing-btn .icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--border);
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.clothing-btn.active .icon-box {
+  background: var(--primary);
+  color: white;
+}
+
+.clothing-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.clothing-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.clothing-detail {
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+/* 颜色选择器 */
+.color-selector {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 12px;
+  border-radius: 16px;
+  gap: 8px;
+}
+
+.color-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+
+.color-swatch:hover {
+  transform: scale(1.1);
+}
+
+.color-swatch.active {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px white, 0 0 0 5px var(--primary);
+}
+
+.color-name {
+  font-size: 11px;
+  color: var(--text-light);
+  text-align: center;
+  margin-top: 6px;
+}
+
+/* ==================== 规格项 ==================== */
+#batch-specs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.spec-item {
+  background: var(--background);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.spec-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.spec-row .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.spec-row .form-group:first-child {
+  flex: 0 0 120px;
+}
+
+/* ==================== 分区 ==================== */
+.code-section {
+  margin-bottom: 16px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--background);
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.section-header:hover {
+  background: #e2e8f0;
+}
+
+.section-toggle {
+  transition: transform 0.2s;
+}
+
+.section-title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.section-content {
+  padding: 12px 0;
+}
+
+.section-content.collapsed {
+  display: none;
+}
+
