@@ -624,7 +624,7 @@ const Toast = {
 };
 
 // 确认对话框
-function showConfirmModal(message, onConfirm, onCancel) {
+function showConfirmModal(message, onConfirm, onCancel, confirmText = '确认', confirmClass = 'btn-primary') {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
 
@@ -640,7 +640,7 @@ function showConfirmModal(message, onConfirm, onCancel) {
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary modal-cancel">取消</button>
-      <button class="btn btn-danger modal-confirm">确认删除</button>
+      <button class="btn ${confirmClass} modal-confirm">${confirmText}</button>
     </div>
   `;
 
@@ -811,7 +811,10 @@ async function batchDelete() {
       } catch (err) {
         Toast.error('批量删除失败');
       }
-    }
+    },
+    null,
+    '确认删除',
+    'btn-danger'
   );
 }
 
@@ -963,7 +966,10 @@ async function generateCodes() {
         btn.disabled = false;
         btn.classList.remove('btn-loading');
       }
-    }
+    },
+    null,
+    '确认生成',
+    'btn-primary'
   );
 }
 
@@ -1132,7 +1138,10 @@ async function deleteCode(code) {
       } catch (err) {
         Toast.error('删除失败');
       }
-    }
+    },
+    null,
+    '确认删除',
+    'btn-danger'
   );
 }
 
@@ -1193,15 +1202,19 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('redeem-btn').addEventListener('click', redeemCode);
   } else {
     // 管理页面初始化
-    document.getElementById('login-btn').addEventListener('click', adminLogin);
-    document.getElementById('add-spec-btn').addEventListener('click', addSpec);
-    document.getElementById('generate-codes-btn').addEventListener('click', generateCodes);
-    document.getElementById('refresh-btn').addEventListener('click', loadCodesList);
-    document.getElementById('export-btn').addEventListener('click', exportToTxt);
+    // 安全地添加事件监听器（检查元素是否存在）
+    const addEvent = (id, event, handler) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener(event, handler);
+    };
 
-    // 批量操作
-    document.getElementById('batch-delete-btn').addEventListener('click', batchDelete);
-    document.getElementById('cancel-select-btn').addEventListener('click', cancelSelection);
+    addEvent('login-btn', 'click', adminLogin);
+    addEvent('add-spec-btn', 'click', addSpec);
+    addEvent('generate-codes-btn', 'click', generateCodes);
+    addEvent('refresh-btn', 'click', loadCodesList);
+    addEvent('export-btn', 'click', exportToTxt);
+    addEvent('batch-delete-btn', 'click', batchDelete);
+    addEvent('cancel-select-btn', 'click', cancelSelection);
 
     // 默认添加一个规格
     addSpec();

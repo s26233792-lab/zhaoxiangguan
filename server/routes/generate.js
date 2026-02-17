@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { supabase, pool } = require('../db');
+const { pool } = require('../db');
 
 module.exports = async (req, res) => {
   const client = await pool.connect().catch(() => null);
@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
     const { image, prompt, deviceId } = req.body;
 
     // ==================== 积分检查和扣除（原子操作） ====================
-    if (deviceId && client) {
+    if (deviceId) {
       // 使用 PostgreSQL 原子操作：检查并扣除积分
       const result = await client.query(
         `UPDATE user_credits
@@ -21,26 +21,6 @@ module.exports = async (req, res) => {
       if (result.rows.length === 0) {
         return res.status(400).json({ error: '积分不足，请先充值' });
       }
-    } else if (deviceId && supabase) {
-      // Supabase 模式：先检查再扣除（非原子，但 Supabase 支持存储过程）
-      const { data: creditData } = await supabase
-        .from('user_credits')
-        .select('credits')
-        .eq('device_id', deviceId)
-        .single();
-
-      if (!creditData || creditData.credits < 1) {
-        return res.status(400).json({ error: '积分不足，请先充值' });
-      }
-
-      // 扣除积分
-      await supabase
-        .from('user_credits')
-        .update({
-          credits: creditData.credits - 1,
-          updated_at: new Date().toISOString()
-        })
-        .eq('device_id', deviceId);
     }
 
     // ==================== 调用图片生成 API ====================

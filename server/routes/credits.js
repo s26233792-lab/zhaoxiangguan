@@ -1,4 +1,4 @@
-const { supabase, pool } = require('../db');
+const { pool } = require('../db');
 
 // GET 查询用户积分
 exports.get = async (req, res) => {
@@ -14,23 +14,11 @@ exports.get = async (req, res) => {
       return res.status(400).json({ error: '设备ID格式无效' });
     }
 
-    let credits = 0;
-
-    if (pool) {
-      const result = await pool.query(
-        'SELECT credits FROM user_credits WHERE device_id = $1',
-        [deviceId]
-      );
-      credits = result.rows[0]?.credits || 0;
-    } else if (supabase) {
-      const { data } = await supabase
-        .from('user_credits')
-        .select('credits')
-        .eq('device_id', deviceId)
-        .single();
-
-      credits = data?.credits || 0;
-    }
+    const result = await pool.query(
+      'SELECT credits FROM user_credits WHERE device_id = $1',
+      [deviceId]
+    );
+    const credits = result.rows[0]?.credits || 0;
 
     return res.json({ credits });
 
@@ -61,51 +49,18 @@ exports.post = async (req, res) => {
     }
 
     // 使用 PostgreSQL 原子操作充值
-    if (client) {
-      const result = await client.query(
-        `INSERT INTO user_credits (device_id, credits) VALUES ($1, $2)
-         ON CONFLICT (device_id) DO UPDATE
-         SET credits = user_credits.credits + $2, updated_at = NOW()
-         RETURNING credits`,
-        [deviceId, amount]
-      );
+    const result = await client.query(
+      `INSERT INTO user_credits (device_id, credits) VALUES ($1, $2)
+       ON CONFLICT (device_id) DO UPDATE
+       SET credits = user_credits.credits + $2, updated_at = NOW()
+       RETURNING credits`,
+      [deviceId, amount]
+    );
 
-      return res.json({
-        success: true,
-        remaining: result.rows[0].credits
-      });
-    }
-
-    // Supabase 模式（非原子）
-    if (supabase) {
-      const { data: existing } = await supabase
-        .from('user_credits')
-        .select('credits')
-        .eq('device_id', deviceId)
-        .single();
-
-      if (existing) {
-        const { data } = await supabase
-          .from('user_credits')
-          .update({ credits: existing.credits + amount, updated_at: new Date().toISOString() })
-          .eq('device_id', deviceId)
-          .select('credits')
-          .single();
-
-        return res.json({ success: true, remaining: data.credits });
-      } else {
-        const { data } = await supabase
-          .from('user_credits')
-          .insert({ device_id: deviceId, credits: amount })
-          .select('credits')
-          .single();
-
-        return res.json({ success: true, remaining: data.credits });
-      }
-    }
-
-    // 内存存储模式
-    return res.status(500).json({ error: '数据库未配置' });
+    return res.json({
+      success: true,
+      remaining: result.rows[0].credits
+    });
 
   } catch (error) {
     console.error('充值积分失败:', error);

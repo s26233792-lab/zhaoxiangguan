@@ -92,19 +92,21 @@
           <div class="card-header">
             <h2><i class="fas fa-list"></i> 卡密管理</h2>
             <div class="card-actions">
-              <button id="export-btn" class="btn btn-secondary">
-                <i class="fas fa-download"></i> 导出 TXT
-              </button>
-              <button id="refresh-btn" class="btn btn-secondary">
+              <button id="refresh-btn" class="btn btn-secondary btn-small">
                 <i class="fas fa-sync"></i> 刷新
+              </button>
+              <button id="export-btn" class="btn btn-secondary btn-small">
+                <i class="fas fa-download"></i> 导出
               </button>
             </div>
           </div>
 
-          <!-- 搜索框 -->
-          <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="code-search" class="input" placeholder="搜索卡密或点数..." oninput="filterCodes(this.value)">
+          <!-- 工具栏 -->
+          <div class="toolbar">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="code-search" class="input" placeholder="搜索卡密或点数..." oninput="filterCodes(this.value)">
+            </div>
           </div>
 
           <!-- 批量操作栏 -->
@@ -115,82 +117,85 @@
             </div>
             <div class="batch-actions-buttons">
               <button id="batch-delete-btn" class="btn btn-danger btn-small">
-                <i class="fas fa-trash"></i> 批量删除
+                <i class="fas fa-trash"></i> 删除
               </button>
               <button id="cancel-select-btn" class="btn btn-secondary btn-small">
-                取消选择
+                取消
               </button>
             </div>
           </div>
 
-          <!-- 可用卡密分区 -->
-          <div class="code-section">
-            <div class="section-header" onclick="toggleSection('active')">
-              <i class="fas fa-chevron-down section-toggle"></i>
-              <span class="section-title">可用卡密</span>
-              <span class="status-badge active" id="active-count">0</span>
-            </div>
-            <div class="section-content" id="active-section">
-              <div class="table-wrapper">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th class="checkbox-cell">
-                        <input type="checkbox" class="row-checkbox" id="select-all-active" onclick="toggleSelectAll('active')">
-                      </th>
-                      <th>卡密</th>
-                      <th>点数</th>
-                      <th>操作</th>
-                    </tr>
-                  </thead>
-                  <tbody id="active-table-body">
-                    <tr>
-                      <td colspan="4" class="text-center">
-                        <div class="empty-state">
-                          <i class="fas fa-inbox"></i>
-                          <h3>暂无可用卡密</h3>
-                          <p>点击上方"生成卡密"创建新的卡密</p>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+          <!-- 卡密列表 -->
+          <div class="code-list">
+            <!-- 可用卡密分区 -->
+            <div class="code-section">
+              <div class="section-header" onclick="toggleSection('active')">
+                <i class="fas fa-chevron-down section-toggle"></i>
+                <span class="section-title">可用卡密</span>
+                <span class="status-badge active" id="active-count">0</span>
+              </div>
+              <div class="section-content" id="active-section">
+                <div class="table-wrapper">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th class="checkbox-cell">
+                          <input type="checkbox" class="row-checkbox" id="select-all-active" onclick="toggleSelectAll('active')">
+                        </th>
+                        <th>卡密</th>
+                        <th class="text-center">点数</th>
+                        <th class="text-right">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="active-table-body">
+                      <tr>
+                        <td colspan="4" class="text-center">
+                          <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h3>暂无可用卡密</h3>
+                            <p>点击上方"生成卡密"创建新的卡密</p>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- 已使用卡密分区 -->
-          <div class="code-section">
-            <div class="section-header" onclick="toggleSection('used')">
-              <i class="fas fa-chevron-down section-toggle"></i>
-              <span class="section-title">已使用卡密</span>
-              <span class="status-badge used" id="used-count">0</span>
-            </div>
-            <div class="section-content" id="used-section">
-              <div class="table-wrapper">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th class="checkbox-cell">
-                        <input type="checkbox" class="row-checkbox" id="select-all-used" onclick="toggleSelectAll('used')">
-                      </th>
-                      <th>卡密</th>
-                      <th>点数</th>
-                      <th>使用时间</th>
-                      <th>操作</th>
-                    </tr>
-                  </thead>
-                  <tbody id="used-table-body">
-                    <tr>
-                      <td colspan="5" class="text-center">
-                        <div class="empty-state">
-                          <i class="fas fa-inbox"></i>
-                          <h3>暂无已使用卡密</h3>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+            <!-- 已使用卡密分区 -->
+            <div class="code-section">
+              <div class="section-header" onclick="toggleSection('used')">
+                <i class="fas fa-chevron-down section-toggle"></i>
+                <span class="section-title">已使用卡密</span>
+                <span class="status-badge used" id="used-count">0</span>
+              </div>
+              <div class="section-content" id="used-section">
+                <div class="table-wrapper">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th class="checkbox-cell">
+                          <input type="checkbox" class="row-checkbox" id="select-all-used" onclick="toggleSelectAll('used')">
+                        </th>
+                        <th>卡密</th>
+                        <th class="text-center">点数</th>
+                        <th>使用时间</th>
+                        <th class="text-right">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="used-table-body">
+                      <tr>
+                        <td colspan="5" class="text-center">
+                          <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h3>暂无已使用卡密</h3>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>

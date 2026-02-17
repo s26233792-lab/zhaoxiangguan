@@ -1268,3 +1268,160 @@ textarea {
   font-size: 10px;
 }
 
+/* ==================== 管理后台增强样式 ==================== */
+
+/* 工具栏 */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.toolbar .search-box {
+  margin-bottom: 0;
+  flex: 1;
+}
+
+/* 卡密列表容器 */
+.code-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 文本对齐 */
+.text-right {
+  text-align: right;
+}
+
+/* 表格操作按钮 */
+.table-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.table-actions .btn {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+/* 规格项增强 */
+.spec-item {
+  transition: all 0.2s;
+}
+
+.spec-item:hover {
+  background: #f1f5f9;
+}
+
+/* 规格项输入框 */
+.spec-points,
+.spec-amount {
+  font-size: 14px;
+}
+
+/* 按钮组 */
+.btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-group .btn {
+  flex: 1;
+}
+
+/* 响应式优化 */
+@media (max-width: 767px) {
+  .toolbar {
+    flex-direction: column;
+  }
+
+  .toolbar .search-box {
+    width: 100%;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .card-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .batch-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .batch-actions-buttons {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .batch-actions-buttons .btn {
+    flex: 1;
+  }
+}
+
+/* 加载骨架屏 */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* 分隔线 */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+/* 提示信息 */
+.hint-text {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+/* 表格状态指示器 */
+.status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.status-indicator.active {
+  background: var(--success);
+}
+
+.status-indicator.used {
+  background: var(--text-light);
+}
+
+/* 代码块样式优化 */
+.data-table code {
+  font-size: 13px;
+  padding: 3px 6px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  color: var(--primary);
+  font-weight: 500;
+}
+

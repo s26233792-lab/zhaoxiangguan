@@ -1,4 +1,4 @@
-const { supabase, pool } = require('../db');
+const { pool } = require('../db');
 
 module.exports = async (req, res) => {
   try {
@@ -31,22 +31,8 @@ module.exports = async (req, res) => {
     }
 
     // 从数据库删除
-    let deleted = false;
-
-    if (pool) {
-      const result = await pool.query('DELETE FROM verification_codes WHERE code = $1 RETURNING code', [code]);
-      deleted = result.rows.length > 0;
-    } else if (supabase) {
-      const { error } = await supabase
-        .from('verification_codes')
-        .delete()
-        .eq('code', code);
-
-      if (error) {
-        throw error;
-      }
-      deleted = true;
-    }
+    const result = await pool.query('DELETE FROM verification_codes WHERE code = $1 RETURNING code', [code]);
+    const deleted = result.rows.length > 0;
 
     if (!deleted) {
       return res.status(404).json({ error: '卡密不存在' });

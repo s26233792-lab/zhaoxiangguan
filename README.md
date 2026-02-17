@@ -13,8 +13,8 @@
 
 - 前端: 纯 HTML + CSS + JavaScript
 - 后端: Node.js + Express
-- 数据库: Supabase (PostgreSQL) 或 Railway PostgreSQL
-- 部署: Railway / Vercel
+- 数据库: Railway PostgreSQL
+- 部署: Railway
 
 ## 快速开始
 
@@ -35,9 +35,8 @@ cp .env.example .env
 
 编辑 `.env` 文件：
 ```env
-# Supabase 配置
-SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+# Railway PostgreSQL 数据库
+DATABASE_URL=postgresql://user:password@host:port/database
 
 # 图片生成 API
 API_ENDPOINT=https://api.example.com/v1/generate
@@ -49,37 +48,40 @@ ADMIN_PASSWORD=your_admin_password
 
 ### 3. 创建数据库表
 
-在 Supabase SQL Editor 中执行：
+在 PostgreSQL 中执行：
 
 ```sql
 -- 验证码表
 CREATE TABLE verification_codes (
-  code TEXT PRIMARY KEY,
-  points INTEGER NOT NULL DEFAULT 1,
-  status TEXT NOT NULL DEFAULT 'active',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  used_at TIMESTAMPTZ,
-  sync_status TEXT DEFAULT 'synced',
-  sync_error TEXT,
-  last_sync_at TIMESTAMPTZ DEFAULT NOW()
+  id SERIAL PRIMARY KEY,
+  code VARCHAR(20) UNIQUE NOT NULL,
+  points INTEGER NOT NULL,
+  status VARCHAR(20) DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT NOW(),
+  used_at TIMESTAMP
 );
 
 -- 用户积分表
 CREATE TABLE user_credits (
-  device_id TEXT PRIMARY KEY,
-  credits INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  id SERIAL PRIMARY KEY,
+  device_id VARCHAR(100) UNIQUE NOT NULL,
+  credits INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- 使用日志表
 CREATE TABLE usage_logs (
-  id BIGSERIAL PRIMARY KEY,
-  code TEXT NOT NULL,
-  points INTEGER NOT NULL,
-  device_id TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  id SERIAL PRIMARY KEY,
+  device_id VARCHAR(100),
+  action VARCHAR(50),
+  created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- 创建索引
+CREATE INDEX idx_verification_codes_code ON verification_codes(code);
+CREATE INDEX idx_verification_codes_status ON verification_codes(status);
+CREATE INDEX idx_user_credits_device_id ON user_credits(device_id);
 ```
 
 ### 4. 启动服务器
@@ -95,9 +97,10 @@ npm start
 1. 将代码推送到 GitHub
 2. 访问 [railway.app](https://railway.app)，连接 GitHub 仓库
 3. Railway 自动检测 Node.js 项目
-4. 在 Railway 设置环境变量（参考 .env.example）
-5. 点击 Deploy，等待完成
-6. 获得一个 `.railway.app` 域名
+4. 添加 PostgreSQL 服务
+5. 在项目设置环境变量（参考 .env.example）
+6. 点击 Deploy，等待完成
+7. 获得一个 `.railway.app` 域名
 
 ## 项目结构
 
@@ -116,6 +119,7 @@ npm start
 │       ├── verify-code.js   # 卡密验证
 │       ├── generate-codes.js # 生成卡密
 │       ├── credits.js       # 积分管理
+│       ├── delete-code.js   # 删除卡密
 │       └── stats.js         # 统计数据
 ├── package.json
 ├── .env.example
@@ -130,9 +134,9 @@ npm start
 | `/api/verify-code` | POST | 验证卡密 |
 | `/api/verify-code` | GET | 查询卡密状态 |
 | `/api/credits` | GET | 查询积分 |
-| `/api/credits` | POST | 消费积分 |
 | `/api/generate-codes` | POST | 生成卡密（管理员） |
 | `/api/generate-codes` | GET | 查询卡密列表（管理员） |
+| `/api/delete-code` | POST | 删除卡密（管理员） |
 | `/api/stats` | GET | 获取统计数据（管理员） |
 
 ## 注意事项

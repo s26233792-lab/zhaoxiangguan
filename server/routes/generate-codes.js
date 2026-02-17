@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { supabase, pool } = require('../db');
+const { pool } = require('../db');
 
 // 生成加密安全的随机卡密
 function generateSecureCode(length) {
@@ -73,53 +73,6 @@ exports.post = async (req, res) => {
         );
 
         generatedCodes.push({ code, points, status: 'active' });
-      }
-
-      return res.json({
-        success: true,
-        codes: generatedCodes,
-        count: generatedCodes.length,
-        message: `已生成 ${generatedCodes.length} 张验证码`
-      });
-    }
-
-    // Supabase 模式
-    if (supabase) {
-      for (let i = 0; i < amount; i++) {
-        let code;
-        let exists = true;
-        let attempts = 0;
-        const maxAttempts = 100;
-
-        while (exists && attempts < maxAttempts) {
-          code = generateSecureCode(codeLength);
-          const { data } = await supabase
-            .from('verification_codes')
-            .select('code')
-            .eq('code', code)
-            .single();
-
-          exists = !!data;
-          attempts++;
-        }
-
-        if (attempts >= maxAttempts) {
-          console.error('无法生成唯一卡密');
-          continue;
-        }
-
-        const { data, error } = await supabase
-          .from('verification_codes')
-          .insert({ code, points, status: 'active' })
-          .select()
-          .single();
-
-        if (error) {
-          console.error('插入验证码失败:', error);
-          continue;
-        }
-
-        generatedCodes.push(data);
       }
 
       return res.json({

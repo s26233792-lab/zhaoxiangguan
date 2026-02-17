@@ -1,4 +1,4 @@
-const { supabase, pool } = require('../db');
+const { pool } = require('../db');
 
 // POST 验证卡密并发放积分（原子操作）
 exports.post = async (req, res) => {
@@ -82,67 +82,6 @@ exports.post = async (req, res) => {
         await client.query('ROLLBACK');
         throw err;
       }
-    }
-
-    // Supabase 模式（非原子，但最佳努力）
-    if (supabase) {
-      // 查询验证码
-      const { data: codeData, error: queryError } = await supabase
-        .from('verification_codes')
-        .select('points, status')
-        .eq('code', cleanCode)
-        .single();
-
-      if (queryError || !codeData || codeData.status !== 'active') {
-        return res.status(404).json({ error: '验证码不存在或已使用' });
-      }
-
-      const points = codeData.points;
-
-      // 更新验证码状态
-      const { error: updateError } = await supabase
-        .from('verification_codes')
-        .update({ status: 'used', used_at: new Date().toISOString() })
-        .eq('code', cleanCode);
-
-      if (updateError) throw updateError;
-
-      // 记录使用日志
-      await supabase
-        .from('usage_logs')
-        .insert({ device_id: deviceId, action: `redeem_code:${cleanCode}` });
-
-      // 更新用户积分
-      const { data: existingCredit } = await supabase
-        .from('user_credits')
-        .select('credits')
-        .eq('device_id', deviceId)
-        .single();
-
-      let remainingCredits;
-      if (existingCredit) {
-        const { data } = await supabase
-          .from('user_credits')
-          .update({ credits: existingCredit.credits + points, updated_at: new Date().toISOString() })
-          .eq('device_id', deviceId)
-          .select('credits')
-          .single();
-        remainingCredits = data.credits;
-      } else {
-        const { data } = await supabase
-          .from('user_credits')
-          .insert({ device_id: deviceId, credits: points })
-          .select('credits')
-          .single();
-        remainingCredits = data.credits;
-      }
-
-      return res.json({
-        success: true,
-        points,
-        remaining: remainingCredits,
-        message: `验证成功，+${points} 点数`
-      });
     }
 
     return res.status(500).json({ error: '数据库未配置' });
