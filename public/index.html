@@ -4,14 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>美式照相馆 - AI图片生成</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style-optimized.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+  <!-- 跳过主内容链接（无障碍） -->
+  <a href="#main-content" class="skip-link">跳到主内容</a>
+
   <!-- 顶部导航 -->
   <nav class="navbar">
     <div class="container">
-      <h1 class="logo">美式照相馆</h1>
+      <a href="/" class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-title">美式照相馆</span>
+          <span class="logo-subtitle">AMERICAN STUDIO</span>
+        </div>
+      </a>
       <div class="nav-right">
         <span class="credit-display">
           <i class="fas fa-coins"></i>
@@ -22,7 +36,7 @@
   </nav>
 
   <!-- 主内容区 -->
-  <main class="main-content">
+  <main id="main-content" class="main-content page-transition">
     <div class="container">
       <!-- 积分充值模态框 -->
       <div id="credit-modal" class="modal hidden">
@@ -184,7 +198,13 @@
               </div>
               <span id="percent-text" class="percent-text">0%</span>
             </div>
-            <p id="loading-tip" class="loading-tip">正在生成中...</p>
+
+            <!-- 骨架屏预览 -->
+            <div class="skeleton-preview" style="margin: 24px 0;">
+              <div class="skeleton skeleton-image"></div>
+            </div>
+
+            <p id="loading-tip" class="loading-tip">正在生成中</p>
           </div>
 
           <!-- 结果展示 -->
@@ -193,7 +213,9 @@
               <i class="fas fa-image"></i>
               <p>生成的图片将显示在这里</p>
             </div>
-            <img id="result-image" class="result-image hidden" alt="生成的图片">
+            <div id="result-image-wrapper" class="result-image-wrapper hidden">
+              <img id="result-image" class="result-image" alt="生成的图片">
+            </div>
           </div>
 
           <!-- 下载按钮 -->
@@ -209,6 +231,11 @@
   <div id="status-message" class="status-message hidden">
     <span id="status-text"></span>
   </div>
+
+  <!-- 返回顶部按钮 -->
+  <button id="scroll-to-top" class="scroll-to-top" aria-label="返回顶部">
+    <i class="fas fa-arrow-up"></i>
+  </button>
 
   <script src="app.js"></script>
 </body>

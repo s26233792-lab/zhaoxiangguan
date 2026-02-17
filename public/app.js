@@ -33,6 +33,89 @@ function showStatus(message, type = 'info') {
   setTimeout(() => el.classList.add('hidden'), 3000);
 }
 
+// ==================== 增强的 Toast 系统 ====================
+class ToastManager {
+  constructor() {
+    this.toasts = [];
+    this.container = null;
+    this.initContainer();
+  }
+
+  initContainer() {
+    // 检查是否已存在容器
+    this.container = document.querySelector('.toast-container');
+    if (!this.container) {
+      this.container = document.createElement('div');
+      this.container.className = 'toast-container';
+      document.body.appendChild(this.container);
+    }
+  }
+
+  show(message, type = 'info', options = {}) {
+    const toast = document.createElement('div');
+    toast.className = `status-message ${type}`;
+
+    const icons = {
+      success: '<i class="fas fa-check-circle icon"></i>',
+      error: '<i class="fas fa-exclamation-circle icon"></i>',
+      info: '<i class="fas fa-info-circle icon"></i>',
+      warning: '<i class="fas fa-exclamation-triangle icon"></i>'
+    };
+
+    let html = `${icons[type] || icons.info}`;
+    html += `<span class="content">${message}</span>`;
+
+    if (options.action) {
+      html += `<span class="action" onclick="${options.action.onclick}">${options.action.text}</span>`;
+    }
+
+    toast.innerHTML = html;
+
+    this.container.appendChild(toast);
+    this.toasts.push(toast);
+
+    // 自动移除
+    const duration = options.duration || 3000;
+    setTimeout(() => this.remove(toast), duration);
+
+    // 点击关闭
+    toast.onclick = (e) => {
+      if (!e.target.classList.contains('action')) {
+        this.remove(toast);
+      }
+    };
+
+    return toast;
+  }
+
+  remove(toast) {
+    toast.classList.add('toast-exit');
+    setTimeout(() => {
+      toast.remove();
+      this.toasts = this.toasts.filter(t => t !== toast);
+    }, 300);
+  }
+
+  success(message, options = {}) {
+    return this.show(message, 'success', options);
+  }
+
+  error(message, options = {}) {
+    return this.show(message, 'error', { ...options, duration: 5000 });
+  }
+
+  info(message, options = {}) {
+    return this.show(message, 'info', options);
+  }
+
+  warning(message, options = {}) {
+    return this.show(message, 'warning', options);
+  }
+}
+
+// 初始化 Toast 管理器
+const toast = new ToastManager();
+
 // 打开/关闭模态框
 function openModal(id) {
   document.getElementById(id).classList.remove('hidden');
@@ -40,6 +123,35 @@ function openModal(id) {
 
 function closeModal(id) {
   document.getElementById(id).classList.add('hidden');
+}
+
+// ==================== 波纹效果 ====================
+function createRipple(event, element, type = 'default') {
+  const ripple = document.createElement('span');
+  const rect = element.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  const x = event.clientX - rect.left - size / 2;
+  const y = event.clientY - rect.top - size / 2;
+
+  ripple.style.width = ripple.style.height = `${size}px`;
+  ripple.style.left = `${x}px`;
+  ripple.style.top = `${y}px`;
+  ripple.className = `ripple ${type === 'success' ? 'ripple-success' : type === 'error' ? 'ripple-error' : ''}`;
+
+  element.appendChild(ripple);
+
+  setTimeout(() => ripple.remove(), 600);
+}
+
+// 为所有交互元素附加波纹效果
+function attachRippleEffects() {
+  const interactiveElements = document.querySelectorAll('.btn, .size-btn, .option-btn, .clothing-btn, .color-swatch');
+
+  interactiveElements.forEach(element => {
+    element.addEventListener('click', (e) => {
+      createRipple(e, element);
+    });
+  });
 }
 
 // ==================== API 客户端 ====================
@@ -261,6 +373,40 @@ function removeImage() {
   document.getElementById('file-input').value = '';
 }
 
+// ==================== 庆祝效果 ====================
+function celebrateSuccess() {
+  // 创建五彩纸屑
+  const container = document.createElement('div');
+  container.className = 'confetti-container';
+  document.body.appendChild(container);
+
+  const colors = ['#1B4D3E', '#D4A574', '#C8102E', '#2D7A3E', '#FFD700'];
+
+  for (let i = 0; i < 50; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.left = Math.random() * 100 + 'vw';
+    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.animationDelay = Math.random() * 2 + 's';
+    confetti.style.animationDuration = (2 + Math.random() * 2) + 's';
+
+    // 随机形状
+    if (Math.random() > 0.5) {
+      confetti.style.borderRadius = '50%';
+    }
+
+    container.appendChild(confetti);
+  }
+
+  // 动画结束后清理
+  setTimeout(() => container.remove(), 5000);
+}
+
+function showSuccessAnimation(element) {
+  element.classList.add('success-pulse');
+  setTimeout(() => element.classList.remove('success-pulse'), 600);
+}
+
 // ==================== 图片生成 ====================
 async function generateImage() {
   if (config.isGenerating) {
@@ -294,48 +440,64 @@ async function generateImage() {
 
   document.getElementById('loading-state').classList.remove('hidden');
   document.getElementById('result-placeholder').classList.add('hidden');
+  document.getElementById('result-image-wrapper').classList.add('hidden');
   document.getElementById('result-image').classList.add('hidden');
 
   // 进度动画
   let progress = 0;
   const progressBar = document.getElementById('progress-bar');
+  const progressContainer = document.querySelector('.progress-bar');
   const percentText = document.getElementById('percent-text');
-  const tips = ['正在构建3D面部...', '优化伦勃朗光影...', '适配服装材质...', '正在生成 2K 原图...'];
+  const tips = ['正在构建3D面部', '优化伦勃朗光影', '适配服装材质', '正在生成 2K 原图'];
   const loadingTip = document.getElementById('loading-tip');
+
+  // 添加进度条激活状态
+  if (progressContainer) progressContainer.classList.add('active');
 
   const progressTimer = setInterval(() => {
     if (progress < 90) {
-      progress += Math.random() * 5;
+      progress += Math.random() * 3;
       progressBar.style.width = `${progress}%`;
       percentText.textContent = `${Math.floor(progress)}%`;
-      loadingTip.textContent = tips[Math.min(Math.floor(progress / 25), tips.length - 1)];
+
+      // 更新提示
+      const tipIndex = Math.min(Math.floor(progress / 22), tips.length - 1);
+      loadingTip.textContent = tips[tipIndex];
     }
-  }, 300);
+  }, 400);
 
   try {
     const resultUrl = await API.generateImage(config.imageBase64, prompt, config.abortController.signal);
 
     const resultImg = document.getElementById('result-image');
+    const resultWrapper = document.getElementById('result-image-wrapper');
     resultImg.src = resultUrl;
+    resultWrapper.classList.remove('hidden');
     resultImg.classList.remove('hidden');
     document.getElementById('result-placeholder').classList.add('hidden');
     document.getElementById('download-btn').disabled = false;
 
     progressBar.style.width = '100%';
     percentText.textContent = '100%';
-    loadingTip.textContent = '生成完成！';
+    loadingTip.textContent = '生成完成';
 
     showStatus('生成成功！已消耗 1 点数', 'success');
+
+    // 触发庆祝动画
+    celebrateSuccess();
+    showSuccessAnimation(resultWrapper);
 
     await loadCredits();
 
     setTimeout(() => {
       document.getElementById('loading-state').classList.add('hidden');
+      if (progressContainer) progressContainer.classList.remove('active');
       resetGenerateUI();
     }, 500);
 
   } catch (err) {
     showStatus(`生成失败: ${err.message}`, 'error');
+    if (progressContainer) progressContainer.classList.remove('active');
     resetGenerateUI();
   } finally {
     clearInterval(progressTimer);
@@ -357,6 +519,72 @@ function downloadImage() {
     a.href = resultImg.src;
     a.download = `american_photo_${Date.now()}.jpg`;
     a.click();
+  }
+}
+
+// ==================== 返回顶部按钮 ====================
+function initScrollToTop() {
+  const scrollBtn = document.getElementById('scroll-to-top');
+
+  if (!scrollBtn) return;
+
+  // 根据滚动位置显示/隐藏
+  window.addEventListener('scroll', () => {
+    if (window.pageYOffset > 300) {
+      scrollBtn.classList.add('visible');
+    } else {
+      scrollBtn.classList.remove('visible');
+    }
+  }, { passive: true });
+
+  // 点击滚动到顶部
+  scrollBtn.addEventListener('click', () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  });
+}
+
+// ==================== 移动端手势 ====================
+let touchStartX = 0;
+let touchStartY = 0;
+
+function initTouchGestures() {
+  // 左滑删除图片
+  const previewUpload = document.getElementById('preview-upload');
+
+  if (previewUpload) {
+    previewUpload.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    previewUpload.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      touchEndY = e.changedTouches[0].screenY;
+      handleSwipeGesture(previewUpload);
+    }, { passive: true });
+  }
+}
+
+function handleSwipeGesture(previewElement) {
+  const deltaX = touchEndX - touchStartX;
+  const deltaY = touchEndY - touchStartY;
+
+  // 水平滑动（左或右）
+  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+    if (deltaX < 0 && config.imageBase64) {
+      // 左滑删除
+      previewElement.style.transform = `translateX(${deltaX}px)`;
+      previewElement.style.opacity = '0';
+
+      setTimeout(() => {
+        removeImage();
+        previewElement.style.transform = '';
+        previewElement.style.opacity = '';
+      }, 200);
+    }
   }
 }
 
@@ -634,6 +862,15 @@ async function deleteCode(code) {
 
 // ==================== 初始化 ====================
 document.addEventListener('DOMContentLoaded', () => {
+  // 附加波纹效果
+  attachRippleEffects();
+
+  // 初始化返回顶部按钮
+  initScrollToTop();
+
+  // 初始化移动端手势
+  initTouchGestures();
+
   // 检查是否是管理页面
   const isAdminPage = document.body.classList.contains('admin-page');
 
