@@ -11,7 +11,7 @@
   <!-- 顶部导航 -->
   <nav class="navbar">
     <div class="container">
-      <h1 class="logo">管理后台</h1>
+      <h1 class="logo"><i class="fas fa-camera"></i> 管理后台</h1>
       <div class="nav-right">
         <a href="/" class="btn btn-secondary btn-small">
           <i class="fas fa-home"></i> 返回首页
@@ -25,30 +25,40 @@
     <div class="container">
       <!-- 登录区域 -->
       <div id="login-panel" class="card login-panel">
+        <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
         <h2>管理员登录</h2>
-        <input type="password" id="admin-password" placeholder="请输入管理员密码" class="input">
-        <button id="login-btn" class="btn btn-primary btn-large">登录</button>
+        <div class="form-group">
+          <div class="password-wrapper">
+            <input type="password" id="admin-password" placeholder="请输入管理员密码" class="input">
+            <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
+              <i class="fas fa-eye" id="password-toggle-icon"></i>
+            </button>
+          </div>
+        </div>
+        <button id="login-btn" class="btn btn-primary btn-large">
+          <i class="fas fa-sign-in-alt"></i> 登录
+        </button>
       </div>
 
       <!-- 管理面板 -->
       <div id="admin-panel" class="hidden">
         <!-- 统计数据 -->
         <div class="stats-grid">
-          <div class="stat-card">
+          <div class="stat-card gradient-1">
             <div class="stat-icon"><i class="fas fa-ticket-alt"></i></div>
             <div class="stat-info">
               <span class="stat-value" id="stat-total-codes">0</span>
               <span class="stat-label">总卡密数</span>
             </div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card gradient-2">
             <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
             <div class="stat-info">
               <span class="stat-value" id="stat-active-codes">0</span>
               <span class="stat-label">可用卡密</span>
             </div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card gradient-3">
             <div class="stat-icon"><i class="fas fa-users"></i></div>
             <div class="stat-info">
               <span class="stat-value" id="stat-users">0</span>
@@ -59,7 +69,7 @@
 
         <!-- 生成卡密 -->
         <div class="card">
-          <h2>生成卡密</h2>
+          <h2><i class="fas fa-plus-circle"></i> 生成卡密</h2>
 
           <!-- 规格列表容器 -->
           <div id="batch-specs-container">
@@ -80,7 +90,7 @@
         <!-- 卡密管理 -->
         <div class="card">
           <div class="card-header">
-            <h2>卡密管理</h2>
+            <h2><i class="fas fa-list"></i> 卡密管理</h2>
             <div class="card-actions">
               <button id="export-btn" class="btn btn-secondary">
                 <i class="fas fa-download"></i> 导出 TXT
@@ -91,25 +101,58 @@
             </div>
           </div>
 
+          <!-- 搜索框 -->
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="code-search" class="input" placeholder="搜索卡密或点数..." oninput="filterCodes(this.value)">
+          </div>
+
+          <!-- 批量操作栏 -->
+          <div id="batch-actions" class="batch-actions hidden">
+            <div class="batch-actions-info">
+              <i class="fas fa-check-square"></i>
+              <span>已选择 <strong id="selected-count">0</strong> 项</span>
+            </div>
+            <div class="batch-actions-buttons">
+              <button id="batch-delete-btn" class="btn btn-danger btn-small">
+                <i class="fas fa-trash"></i> 批量删除
+              </button>
+              <button id="cancel-select-btn" class="btn btn-secondary btn-small">
+                取消选择
+              </button>
+            </div>
+          </div>
+
           <!-- 可用卡密分区 -->
           <div class="code-section">
             <div class="section-header" onclick="toggleSection('active')">
               <i class="fas fa-chevron-down section-toggle"></i>
               <span class="section-title">可用卡密</span>
-              <span class="badge badge-success" id="active-count">0</span>
+              <span class="status-badge active" id="active-count">0</span>
             </div>
             <div class="section-content" id="active-section">
               <div class="table-wrapper">
                 <table class="data-table">
                   <thead>
                     <tr>
+                      <th class="checkbox-cell">
+                        <input type="checkbox" class="row-checkbox" id="select-all-active" onclick="toggleSelectAll('active')">
+                      </th>
                       <th>卡密</th>
                       <th>点数</th>
                       <th>操作</th>
                     </tr>
                   </thead>
                   <tbody id="active-table-body">
-                    <tr><td colspan="3" class="text-center">暂无数据</td></tr>
+                    <tr>
+                      <td colspan="4" class="text-center">
+                        <div class="empty-state">
+                          <i class="fas fa-inbox"></i>
+                          <h3>暂无可用卡密</h3>
+                          <p>点击上方"生成卡密"创建新的卡密</p>
+                        </div>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -121,13 +164,16 @@
             <div class="section-header" onclick="toggleSection('used')">
               <i class="fas fa-chevron-down section-toggle"></i>
               <span class="section-title">已使用卡密</span>
-              <span class="badge badge-secondary" id="used-count">0</span>
+              <span class="status-badge used" id="used-count">0</span>
             </div>
             <div class="section-content" id="used-section">
               <div class="table-wrapper">
                 <table class="data-table">
                   <thead>
                     <tr>
+                      <th class="checkbox-cell">
+                        <input type="checkbox" class="row-checkbox" id="select-all-used" onclick="toggleSelectAll('used')">
+                      </th>
                       <th>卡密</th>
                       <th>点数</th>
                       <th>使用时间</th>
@@ -135,7 +181,14 @@
                     </tr>
                   </thead>
                   <tbody id="used-table-body">
-                    <tr><td colspan="4" class="text-center">暂无数据</td></tr>
+                    <tr>
+                      <td colspan="5" class="text-center">
+                        <div class="empty-state">
+                          <i class="fas fa-inbox"></i>
+                          <h3>暂无已使用卡密</h3>
+                        </div>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -146,11 +199,23 @@
     </div>
   </main>
 
-  <!-- 提示消息 -->
-  <div id="status-message" class="status-message hidden">
-    <span id="status-text"></span>
-  </div>
+  <!-- Toast 容器 -->
+  <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 4000; display: flex; flex-direction: column; gap: 10px;"></div>
 
   <script src="app.js"></script>
+  <script>
+    // 密码显示切换
+    function togglePasswordVisibility() {
+      const input = document.getElementById('admin-password');
+      const icon = document.getElementById('password-toggle-icon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    }
+  </script>
 </body>
 </html>

@@ -588,6 +588,240 @@ function handleSwipeGesture(previewElement) {
   }
 }
 
+// ==================== 管理后台增强工具 ====================
+
+// Toast 通知系统
+const Toast = {
+  show(message, type = 'info') {
+    const container = document.getElementById('toast-container') || document.body;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    const icons = {
+      success: 'fa-check-circle',
+      error: 'fa-times-circle',
+      info: 'fa-info-circle',
+      warning: 'fa-exclamation-circle'
+    };
+
+    toast.innerHTML = `
+      <i class="fas ${icons[type]} toast-icon"></i>
+      <span>${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    // 3秒后自动移除
+    setTimeout(() => {
+      toast.style.animation = 'toastSlideOut 0.3s forwards';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  },
+  success(message) { this.show(message, 'success'); },
+  error(message) { this.show(message, 'error'); },
+  info(message) { this.show(message, 'info'); },
+  warning(message) { this.show(message, 'warning'); }
+};
+
+// 确认对话框
+function showConfirmModal(message, onConfirm, onCancel) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="modal-header">
+      <h3>确认操作</h3>
+      <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>${message}</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary modal-cancel">取消</button>
+      <button class="btn btn-danger modal-confirm">确认删除</button>
+    </div>
+  `;
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // 事件绑定
+  modal.querySelector('.modal-cancel').addEventListener('click', () => {
+    overlay.remove();
+    if (onCancel) onCancel();
+  });
+
+  modal.querySelector('.modal-confirm').addEventListener('click', () => {
+    overlay.remove();
+    if (onConfirm) onConfirm();
+  });
+
+  // 点击背景关闭
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+      if (onCancel) onCancel();
+    }
+  });
+
+  // ESC 键关闭
+  const handleEscape = (e) => {
+    if (e.key === 'Escape') {
+      overlay.remove();
+      if (onCancel) onCancel();
+      document.removeEventListener('keydown', handleEscape);
+    }
+  };
+  document.addEventListener('keydown', handleEscape);
+}
+
+// 数字滚动动画
+function animateValue(element, start, end, duration = 1000) {
+  const startTime = performance.now();
+  const range = end - start;
+
+  const step = (currentTime) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeProgress = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+    const value = Math.floor(start + range * easeProgress);
+
+    element.textContent = value.toLocaleString();
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  };
+
+  requestAnimationFrame(step);
+}
+
+// 复制到剪贴板（增强版）
+async function copyToClipboard(text, buttonElement) {
+  try {
+    await navigator.clipboard.writeText(text);
+
+    if (buttonElement) {
+      const originalHTML = buttonElement.innerHTML;
+      buttonElement.innerHTML = '<i class="fas fa-check"></i> 已复制';
+      buttonElement.classList.add('copied');
+
+      setTimeout(() => {
+        buttonElement.innerHTML = originalHTML;
+        buttonElement.classList.remove('copied');
+      }, 2000);
+    }
+
+    Toast.success('已复制到剪贴板');
+  } catch (err) {
+    Toast.error('复制失败');
+  }
+}
+
+// 搜索过滤
+function filterCodes(keyword) {
+  keyword = keyword.toLowerCase().trim();
+  const tables = ['active-table-body', 'used-table-body'];
+
+  tables.forEach(tableId => {
+    const rows = document.querySelectorAll(`#${tableId} tr`);
+    rows.forEach(row => {
+      if (row.querySelector('.empty-state')) return;
+
+      const code = row.cells[1]?.textContent.toLowerCase() || '';
+      const points = row.cells[2]?.textContent.toLowerCase() || '';
+      const visible = !keyword || code.includes(keyword) || points.includes(keyword);
+      row.style.display = visible ? '' : 'none';
+    });
+  });
+}
+
+// 全选/取消全选
+function toggleSelectAll(type) {
+  const checkboxId = `select-all-${type}`;
+  const tableBodyId = `${type}-table-body`;
+  const masterCheckbox = document.getElementById(checkboxId);
+  const tableBody = document.getElementById(tableBodyId);
+  const checkboxes = tableBody.querySelectorAll('.row-checkbox');
+
+  checkboxes.forEach(cb => {
+    if (cb.closest('tr').style.display !== 'none') {
+      cb.checked = masterCheckbox.checked;
+    }
+  });
+
+  updateBatchActionsBar();
+}
+
+// 更新批量操作栏
+function updateBatchActionsBar() {
+  const allCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+  const count = allCheckboxes.length;
+  const batchActions = document.getElementById('batch-actions');
+  const selectedCount = document.getElementById('selected-count');
+
+  if (count > 0) {
+    batchActions.classList.remove('hidden');
+    selectedCount.textContent = count;
+  } else {
+    batchActions.classList.add('hidden');
+  }
+}
+
+// 批量删除
+async function batchDelete() {
+  const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+  const codes = Array.from(checkboxes).map(cb => cb.dataset.code);
+
+  if (codes.length === 0) {
+    Toast.warning('请先选择要删除的卡密');
+    return;
+  }
+
+  showConfirmModal(
+    `确定删除选中的 ${codes.length} 张卡密吗？此操作无法撤销。`,
+    async () => {
+      try {
+        const adminPassword = localStorage.getItem('admin_password');
+
+        for (const code of codes) {
+          const response = await fetch('/api/delete-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, adminPassword })
+          });
+
+          const data = await response.json();
+          if (!data.success) {
+            Toast.error(`删除卡密 ${code} 失败`);
+          }
+        }
+
+        Toast.success(`成功删除 ${codes.length} 张卡密`);
+        await loadCodesList();
+        await loadAdminData();
+
+        // 重置批量操作栏
+        document.getElementById('batch-actions').classList.add('hidden');
+        document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
+        document.querySelectorAll('[id^="select-all-"]').forEach(cb => cb.checked = false);
+
+      } catch (err) {
+        Toast.error('批量删除失败');
+      }
+    }
+  );
+}
+
+// 取消选择
+function cancelSelection() {
+  document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
+  document.querySelectorAll('[id^="select-all-"]').forEach(cb => cb.checked = false);
+  document.getElementById('batch-actions').classList.add('hidden');
+}
+
 // ==================== 管理后台 ====================
 // 规格管理变量
 let specItems = []; // 存储规格配置 [{points: 1, amount: 10}, ...]
@@ -595,7 +829,7 @@ let specItems = []; // 存储规格配置 [{points: 1, amount: 10}, ...]
 async function adminLogin() {
   const password = document.getElementById('admin-password').value;
   if (!password) {
-    showStatus('请输入管理员密码', 'error');
+    Toast.warning('请输入管理员密码');
     return;
   }
 
@@ -604,7 +838,7 @@ async function adminLogin() {
   localStorage.setItem('admin_password', password);
   document.getElementById('login-panel').classList.add('hidden');
   document.getElementById('admin-panel').classList.remove('hidden');
-  showStatus('登录成功', 'success');
+  Toast.success('登录成功');
 
   // 加载数据
   await loadAdminData();
@@ -614,11 +848,21 @@ async function adminLogin() {
 async function loadAdminData() {
   try {
     const stats = await API.getStats();
-    document.getElementById('stat-total-codes').textContent = stats.totalCodes || 0;
-    document.getElementById('stat-active-codes').textContent = stats.activeCodes || 0;
-    document.getElementById('stat-users').textContent = stats.totalUsers || 0;
+
+    // 使用数字动画
+    const totalCodesEl = document.getElementById('stat-total-codes');
+    const activeCodesEl = document.getElementById('stat-active-codes');
+    const usersEl = document.getElementById('stat-users');
+
+    const currentTotal = parseInt(totalCodesEl.textContent.replace(/,/g, '')) || 0;
+    const currentActive = parseInt(activeCodesEl.textContent.replace(/,/g, '')) || 0;
+    const currentUsers = parseInt(usersEl.textContent.replace(/,/g, '')) || 0;
+
+    animateValue(totalCodesEl, currentTotal, stats.totalCodes || 0);
+    animateValue(activeCodesEl, currentActive, stats.activeCodes || 0);
+    animateValue(usersEl, currentUsers, stats.totalUsers || 0);
   } catch (err) {
-    showStatus('加载数据失败', 'error');
+    Toast.error('加载数据失败');
   }
 }
 
@@ -676,47 +920,51 @@ function updateSpec(index, field, value) {
 // 批量生成卡密
 async function generateCodes() {
   if (specItems.length === 0) {
-    showStatus('请先添加生成规格', 'error');
+    Toast.warning('请先添加生成规格');
     return;
   }
 
   const totalAmount = specItems.reduce((sum, spec) => sum + spec.amount, 0);
-  if (!confirm(`确定生成 ${totalAmount} 张卡密？`)) return;
 
-  const btn = document.getElementById('generate-codes-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 生成中...';
+  showConfirmModal(
+    `确定生成 <strong>${totalAmount}</strong> 张卡密吗？`,
+    async () => {
+      const btn = document.getElementById('generate-codes-btn');
+      btn.disabled = true;
+      btn.classList.add('btn-loading');
 
-  try {
-    const adminPassword = localStorage.getItem('admin_password');
-    if (!adminPassword) {
-      showStatus('请先登录', 'error');
-      return;
-    }
+      try {
+        const adminPassword = localStorage.getItem('admin_password');
+        if (!adminPassword) {
+          Toast.error('请先登录');
+          return;
+        }
 
-    // 依次生成各规格
-    for (const spec of specItems) {
-      const data = await API.generateCodes(spec.points, spec.amount, 8, adminPassword);
-      if (!data.success) {
-        showStatus(`${spec.points}点卡密生成失败: ${data.error}`, 'error');
+        // 依次生成各规格
+        for (const spec of specItems) {
+          const data = await API.generateCodes(spec.points, spec.amount, 8, adminPassword);
+          if (!data.success) {
+            Toast.error(`${spec.points}点卡密生成失败: ${data.error}`);
+          }
+        }
+
+        Toast.success(`成功生成 ${totalAmount} 张卡密`);
+        await loadAdminData();
+        await loadCodesList();
+
+        // 清空规格列表并添加一个默认规格
+        specItems = [];
+        document.getElementById('batch-specs-container').innerHTML = '';
+        addSpec();
+
+      } catch (err) {
+        Toast.error('生成失败');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
       }
     }
-
-    showStatus(`成功生成 ${totalAmount} 张卡密`, 'success');
-    await loadAdminData();
-    await loadCodesList();
-
-    // 清空规格列表并添加一个默认规格
-    specItems = [];
-    document.getElementById('batch-specs-container').innerHTML = '';
-    addSpec();
-
-  } catch (err) {
-    showStatus('生成失败', 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-magic"></i> 生成全部';
-  }
+  );
 }
 
 async function loadCodesList() {
@@ -734,18 +982,31 @@ async function loadCodesList() {
     // 渲染可用卡密
     const activeTbody = document.getElementById('active-table-body');
     if (activeCodes.length === 0) {
-      activeTbody.innerHTML = '<tr><td colspan="3" class="text-center">暂无数据</td></tr>';
+      activeTbody.innerHTML = `
+        <tr>
+          <td colspan="4" class="text-center">
+            <div class="empty-state" style="padding: 40px 20px;">
+              <i class="fas fa-inbox"></i>
+              <h3>暂无可用卡密</h3>
+              <p>点击上方"生成卡密"创建新的卡密</p>
+            </div>
+          </td>
+        </tr>
+      `;
     } else {
       activeTbody.innerHTML = activeCodes.map(code => `
-        <tr>
+        <tr data-code="${code.code}">
+          <td class="checkbox-cell">
+            <input type="checkbox" class="row-checkbox" data-code="${code.code}" onchange="updateBatchActionsBar()">
+          </td>
           <td><code>${code.code}</code></td>
           <td>${code.points}</td>
           <td>
-            <button class="btn btn-small btn-secondary" onclick="copyCode('${code.code}')">
-              <i class="fas fa-copy"></i>
+            <button class="copy-btn" onclick="copyToClipboard('${code.code}', this)">
+              <i class="fas fa-copy"></i> 复制
             </button>
-            <button class="btn btn-small btn-danger" onclick="deleteCode('${code.code}')">
-              <i class="fas fa-trash"></i>
+            <button class="copy-btn" style="color: var(--danger);" onclick="deleteCode('${code.code}')">
+              <i class="fas fa-trash"></i> 删除
             </button>
           </td>
         </tr>
@@ -755,16 +1016,28 @@ async function loadCodesList() {
     // 渲染已使用卡密
     const usedTbody = document.getElementById('used-table-body');
     if (usedCodes.length === 0) {
-      usedTbody.innerHTML = '<tr><td colspan="4" class="text-center">暂无数据</td></tr>';
+      usedTbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center">
+            <div class="empty-state" style="padding: 40px 20px;">
+              <i class="fas fa-inbox"></i>
+              <h3>暂无已使用卡密</h3>
+            </div>
+          </td>
+        </tr>
+      `;
     } else {
       usedTbody.innerHTML = usedCodes.map(code => `
-        <tr>
+        <tr data-code="${code.code}">
+          <td class="checkbox-cell">
+            <input type="checkbox" class="row-checkbox" data-code="${code.code}" onchange="updateBatchActionsBar()">
+          </td>
           <td><code>${code.code}</code></td>
           <td>${code.points}</td>
-          <td>${new Date(code.used_at).toLocaleString()}</td>
+          <td style="font-size: 12px; color: var(--text-light);">${new Date(code.used_at).toLocaleString()}</td>
           <td>
-            <button class="btn btn-small btn-secondary" onclick="copyCode('${code.code}')">
-              <i class="fas fa-copy"></i>
+            <button class="copy-btn" onclick="copyToClipboard('${code.code}', this)">
+              <i class="fas fa-copy"></i> 复制
             </button>
           </td>
         </tr>
@@ -772,7 +1045,7 @@ async function loadCodesList() {
     }
 
   } catch (err) {
-    showStatus('加载失败', 'error');
+    Toast.error('加载失败');
   }
 }
 
@@ -787,9 +1060,9 @@ function toggleSection(type) {
   toggle.classList.toggle('fa-chevron-right');
 }
 
+// copyCode 已被 copyToClipboard 替代，保留此函数作为兼容
 function copyCode(code) {
-  navigator.clipboard.writeText(code);
-  showStatus('已复制', 'success');
+  copyToClipboard(code);
 }
 
 // 导出为 TXT
@@ -799,7 +1072,7 @@ async function exportToTxt() {
     const data = await API.getCodes(adminPassword, 'all', 10000, 0);
 
     if (!data.codes || data.codes.length === 0) {
-      showStatus('没有可导出的卡密', 'error');
+      Toast.warning('没有可导出的卡密');
       return;
     }
 
@@ -828,36 +1101,39 @@ async function exportToTxt() {
     a.click();
     URL.revokeObjectURL(url);
 
-    showStatus('导出成功', 'success');
+    Toast.success('导出成功');
   } catch (err) {
-    showStatus('导出失败', 'error');
+    Toast.error('导出失败');
   }
 }
 
 // 删除单个卡密
 async function deleteCode(code) {
-  if (!confirm(`确定删除卡密 ${code}？`)) return;
+  showConfirmModal(
+    `确定删除卡密 <strong>${code}</strong> 吗？此操作无法撤销。`,
+    async () => {
+      try {
+        const adminPassword = localStorage.getItem('admin_password');
+        const response = await fetch('/api/delete-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, adminPassword })
+        });
 
-  try {
-    const adminPassword = localStorage.getItem('admin_password');
-    const response = await fetch('/api/delete-code', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, adminPassword })
-    });
+        const data = await response.json();
 
-    const data = await response.json();
-
-    if (data.success) {
-      showStatus('删除成功', 'success');
-      await loadCodesList();
-      await loadAdminData();
-    } else {
-      showStatus(data.error || '删除失败', 'error');
+        if (data.success) {
+          Toast.success('删除成功');
+          await loadCodesList();
+          await loadAdminData();
+        } else {
+          Toast.error(data.error || '删除失败');
+        }
+      } catch (err) {
+        Toast.error('删除失败');
+      }
     }
-  } catch (err) {
-    showStatus('删除失败', 'error');
-  }
+  );
 }
 
 // ==================== 初始化 ====================
@@ -922,6 +1198,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('generate-codes-btn').addEventListener('click', generateCodes);
     document.getElementById('refresh-btn').addEventListener('click', loadCodesList);
     document.getElementById('export-btn').addEventListener('click', exportToTxt);
+
+    // 批量操作
+    document.getElementById('batch-delete-btn').addEventListener('click', batchDelete);
+    document.getElementById('cancel-select-btn').addEventListener('click', cancelSelection);
 
     // 默认添加一个规格
     addSpec();
