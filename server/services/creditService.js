@@ -3,6 +3,7 @@
  */
 const creditRepository = require('../repositories/creditRepository');
 const logger = require('../utils/logger');
+const { NotFoundError } = require('../middleware/errorHandler');
 
 class CreditService {
   /**
@@ -55,7 +56,7 @@ class CreditService {
 
     if (remaining === null) {
       logger.warn('Insufficient credits', { deviceId, amount });
-      throw new Error('积分不足，请先充值');
+      throw new NotFoundError('积分不足，请先充值');
     }
 
     logger.info('Credits deducted', {

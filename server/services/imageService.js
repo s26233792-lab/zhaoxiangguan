@@ -148,7 +148,7 @@ class ImageService {
           status: error.response.status,
           statusText: error.response.statusText,
           headers: error.response.headers,
-          data: error.response.data ? error.response.data.toString().substring(0, 500) : 'no data',
+          data: error.response.data ? Buffer.from(error.response.data).toString('utf-8').substring(0, 500) : 'no data',
         });
       } else if (error.request) {
         logger.error('External API request failed (no response)', {
