@@ -278,6 +278,56 @@
   border-radius: var(--radius-md);
 }
 
+/* 上传进度条 */
+.upload-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--space-md);
+  background: linear-gradient(to top, var(--color-bg), transparent);
+}
+
+.upload-progress .progress-bar {
+  height: 4px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.upload-progress .progress-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-normal);
+  position: relative;
+}
+
+/* 进度条闪光效果 */
+.upload-progress .progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+.upload-progress .progress-text {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+}
+
 .upload-hints p {
   margin: var(--space-xs) 0;
   line-height: var(--line-height-normal);
@@ -834,6 +884,78 @@
 }
 
 /* ==================== 响应式设计 ==================== */
+
+/* 移动端额外优化 */
+@media (max-width: 767px) {
+  /* 上传区域移动端优化 */
+  .photo-uploader,
+  .upload-area {
+    min-height: 240px;
+  }
+
+  .upload-preview img {
+    max-height: 300px;
+  }
+
+  /* 移除按钮移动端尺寸 */
+  .preview-remove {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  /* 风格面板移动端优化 */
+  .style-panel {
+    padding: var(--space-md);
+  }
+
+  .style-options {
+    gap: var(--space-xs);
+  }
+
+  .style-option {
+    flex: 1 1 calc(50% - var(--space-xs));
+    min-width: 0;
+    font-size: var(--font-size-sm);
+  }
+
+  /* 生成按钮移动端优化 */
+  .generate-section {
+    flex-direction: column;
+    position: sticky;
+    bottom: 0;
+    background: var(--color-surface);
+    padding: var(--space-md);
+    margin: 0 calc(-1 * var(--space-md)) calc(-1 * var(--space-md)) 0;
+    box-shadow: 0 -4px 12px rgb(0 0 0 / 0.08);
+  }
+
+  .generate-section .btn {
+    width: 100%;
+  }
+
+  /* 结果视图移动端优化 */
+  .result-loading {
+    padding: var(--space-2xl) var(--space-md);
+    min-height: 300px;
+  }
+
+  .loading-spinner {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* 积分徽章移动端优化 */
+  .credits-badge {
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .credits-badge svg {
+    width: 14px;
+    height: 14px;
+  }
+}
 
 /* 超小屏手机 (< 375px) */
 @media (max-width: 374px) {

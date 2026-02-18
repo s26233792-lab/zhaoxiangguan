@@ -18,6 +18,36 @@
   white-space: nowrap;
 }
 
+/* 图标按钮 */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-icon:hover {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.btn-icon:active {
+  transform: scale(0.95);
+}
+
+.btn-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -134,6 +164,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+  max-width: 380px;
+  pointer-events: none;
+}
+
+.toast-container .toast {
+  pointer-events: auto;
 }
 
 .toast {
@@ -443,6 +479,66 @@
 /* 页面加载动画类 */
 .page-enter {
   animation: fadeInUp 0.4s ease-out;
+}
+
+/* ==================== 移动端优化 ==================== */
+
+/* 触摸目标尺寸最小 44px (iOS HIG) */
+@media (max-width: 767px) {
+  /* 按钮触摸尺寸 */
+  .btn {
+    min-height: 44px;
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  /* Toast 移动端定位 */
+  .toast-container {
+    top: var(--space-md);
+    right: var(--space-md);
+    left: var(--space-md);
+    max-width: none;
+  }
+
+  .toast {
+    padding: var(--space-md);
+    font-size: var(--font-size-sm);
+  }
+
+  /* 模态框移动端优化 */
+  .modal-overlay {
+    padding: var(--space-sm);
+    align-items: flex-end;
+  }
+
+  .modal {
+    max-width: 100%;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    animation: slideUpMobile var(--transition-normal);
+  }
+
+  @keyframes slideUpMobile {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 表单输入触摸尺寸 */
+  .form-input {
+    min-height: 44px;
+    font-size: 16px; /* 防止 iOS 自动缩放 */
+  }
+
+  /* 风格选项触摸尺寸 */
+  .style-option {
+    min-height: 44px;
+    padding: var(--space-md);
+  }
 }
 
 /* 内容交错动画 */

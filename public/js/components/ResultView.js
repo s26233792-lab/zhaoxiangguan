@@ -12,7 +12,12 @@ export class ResultView {
       result: null,
     };
 
+    // 用于取消请求的 AbortController
+    this.abortController = null;
+    this.onCancelCallback = null;
+
     this.render();
+    this.bindEvents();
   }
 
   render() {
@@ -24,6 +29,14 @@ export class ResultView {
           <div class="loading-progress">
             <div class="loading-progress-bar" id="progressBar" style="width: 0%;"></div>
           </div>
+          <button class="btn btn-outline btn-cancel" id="cancelBtn" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            取消生成
+          </button>
         </div>
 
         <div class="result-content" id="resultContent" style="display: none;">
@@ -44,13 +57,30 @@ export class ResultView {
     `;
   }
 
-  showLoading() {
+  bindEvents() {
+    // 取消按钮事件
+    const cancelBtn = this.container.querySelector('#cancelBtn');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => this.cancel());
+    }
+  }
+
+  /**
+   * 显示加载状态
+   * @param {Function} onCancel - 取消回调函数
+   */
+  showLoading(onCancel = null) {
+    // 创建新的 AbortController
+    this.abortController = new AbortController();
+    this.onCancelCallback = onCancel;
+
     this.state.loading = true;
     this.state.progress = 0;
 
     this.container.querySelector('#resultView').style.display = 'block';
     this.container.querySelector('#resultLoading').style.display = 'block';
     this.container.querySelector('#resultContent').style.display = 'none';
+    this.container.querySelector('#cancelBtn').style.display = 'inline-flex';
 
     // 模拟进度
     const progressBar = this.container.querySelector('#progressBar');
@@ -61,6 +91,31 @@ export class ResultView {
       }
       progressBar.style.width = this.state.progress + '%';
     }, 500);
+  }
+
+  /**
+   * 取消生成
+   */
+  cancel() {
+    if (this.abortController) {
+      // 触发取消信号
+      this.abortController.abort();
+
+      // 调用取消回调
+      if (this.onCancelCallback) {
+        this.onCancelCallback();
+      }
+    }
+
+    this.hide();
+    store.showToast('已取消生成', 'info');
+  }
+
+  /**
+   * 获取 AbortController signal（用于外部请求）
+   */
+  getAbortSignal() {
+    return this.abortController ? this.abortController.signal : null;
   }
 
   showResult(imageData) {
