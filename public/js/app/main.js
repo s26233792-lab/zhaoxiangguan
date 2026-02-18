@@ -162,8 +162,9 @@ class App {
       // 调用 API
       const response = await api.generateImage(imageBase64, prompt, deviceId, options);
 
-      // 显示结果
-      this.components.resultView.showResult(response);
+      // 显示结果 - 将 Response 转换为二进制数据
+      const imageData = await response.arrayBuffer();
+      this.components.resultView.showResult(imageData);
 
       // 更新积分
       await this.loadCredits();
