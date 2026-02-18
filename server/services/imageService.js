@@ -107,23 +107,62 @@ class ImageService {
    */
   async callImageAPI(imageBase64, prompt) {
     if (!config.API_ENDPOINT || !config.API_KEY) {
-      throw new APIError('API配置错误');
+      logger.error('API configuration missing', {
+        hasEndpoint: !!config.API_ENDPOINT,
+        hasKey: !!config.API_KEY,
+      });
+      throw new APIError('API配置错误，请联系管理员');
     }
 
-    const response = await axios.post(
-      config.API_ENDPOINT,
-      { image: imageBase64, prompt },
-      {
-        headers: {
-          'Authorization': `Bearer ${config.API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        responseType: 'arraybuffer',
-        timeout: config.API_TIMEOUT,
-      }
-    );
+    logger.info('Calling external image API', {
+      endpoint: config.API_ENDPOINT,
+      imageSize: imageBase64?.length,
+      promptLength: prompt?.length,
+    });
 
-    return response.data;
+    try {
+      const response = await axios.post(
+        config.API_ENDPOINT,
+        { image: imageBase64, prompt },
+        {
+          headers: {
+            'Authorization': `Bearer ${config.API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          responseType: 'arraybuffer',
+          timeout: config.API_TIMEOUT || 60000,
+        }
+      );
+
+      logger.info('External API response received', {
+        status: response.status,
+        contentType: response.headers['content-type'],
+        dataSize: response.data?.length,
+      });
+
+      return response.data;
+    } catch (error) {
+      // 详细记录axios错误
+      if (error.response) {
+        logger.error('External API returned error response', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          headers: error.response.headers,
+          data: error.response.data ? error.response.data.toString().substring(0, 500) : 'no data',
+        });
+      } else if (error.request) {
+        logger.error('External API request failed (no response)', {
+          code: error.code,
+          message: error.message,
+        });
+      } else {
+        logger.error('External API request setup error', {
+          message: error.message,
+          stack: error.stack,
+        });
+      }
+      throw error; // 重新抛出，由外层catch处理
+    }
   }
 
   /**

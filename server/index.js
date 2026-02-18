@@ -22,7 +22,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json({
-  limit: '3mb',
+  limit: '6mb',
   strict: true,
 }));
 app.use(express.static('public'));
