@@ -41,7 +41,7 @@ export const config = {
   // 智能换装
   outfits: {
     business_formal: { value: 'business_formal', label: '商务正装', icon: 'suit', hint: '正式西装，商务场合' },
-    business_casual: { value: 'business_casual', label: '商务休闲', icon: 'shirt', hint: '衬衫领带，半正式' },
+    business_casual: { value: 'business_casual', label: '休闲装', icon: 'shirt', hint: '休闲风格，轻松自然' },
     academic: { value: 'academic', label: '美式博士', icon: 'graduation', hint: '学术帽，学术风格' },
     original: { value: 'original', label: '保持原样', icon: 'check', hint: '保持原始服装' },
   },
@@ -50,8 +50,7 @@ export const config = {
   backgrounds: {
     white: { value: 'white', label: '纯白背景', icon: 'circle', color: '#ffffff', hint: '经典白色，干净简洁' },
     gray: { value: 'gray', label: '中性灰', icon: 'circle', color: '#9b9a97', hint: '专业灰色，高级感' },
-    blue: { value: 'blue', label: '专业蓝', icon: 'circle', color: '#0969da', hint: '商务蓝色，信任感' },
-    original: { value: 'original', label: '保持原背景', icon: 'image', color: 'transparent', hint: '保留原始背景' },
+    blue: { value: 'blue', label: '专业蓝', icon: 'circle', color: '#0969da', hint: '商务蓝���，信任感' },
   },
 
   // 设备ID 存储键
