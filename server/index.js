@@ -83,7 +83,8 @@ function validateGenerateRequest(req, res, next) {
 
 // 验证管理员密码
 function validateAdminPassword(req, res, next) {
-  const { adminPassword } = req.body;
+  // 支持从请求体或查询参数获取密码（GET请求用query，POST请求用body）
+  const adminPassword = req.body?.adminPassword || req.query?.adminPassword;
   const envPassword = process.env.ADMIN_PASSWORD;
 
   if (!envPassword) {
@@ -102,6 +103,7 @@ function validateAdminPassword(req, res, next) {
 
 // 公开API（限流）
 app.get('/api/credits', generalLimiter, require('./routes/credits').get);
+app.get('/api/verify-code', generalLimiter, require('./routes/verify-code').get);
 app.post('/api/verify-code', generalLimiter, require('./routes/verify-code').post);
 
 // 需要积分的API（严格限流 + 验证）

@@ -2,7 +2,17 @@ const { pool } = require('../db');
 
 // POST 验证卡密并发放积分（原子操作）
 exports.post = async (req, res) => {
+  // 检查数据库是否已配置
+  if (!pool) {
+    return res.status(500).json({ error: '数据库未配置' });
+  }
+
   const client = await pool.connect().catch(() => null);
+
+  // 如果无法获取数据库连接
+  if (!client) {
+    return res.status(500).json({ error: '数据库连接失败' });
+  }
 
   try {
     const { code, deviceId } = req.body;
@@ -27,64 +37,60 @@ exports.post = async (req, res) => {
     }
 
     // 使用 PostgreSQL 事务确保原子性
-    if (client) {
-      await client.query('BEGIN');
+    await client.query('BEGIN');
 
-      try {
-        // 1. 查询并锁定验证码记录
-        const codeResult = await client.query(
-          `SELECT points, status FROM verification_codes
-           WHERE code = $1 AND status = 'active'
-           FOR UPDATE`,
-          [cleanCode]
-        );
+    try {
+      // 1. 查询并锁定验证码记录
+      const codeResult = await client.query(
+        `SELECT points, status FROM verification_codes
+         WHERE code = $1 AND status = 'active'
+         FOR UPDATE`,
+        [cleanCode]
+      );
 
-        if (codeResult.rows.length === 0) {
-          await client.query('ROLLBACK');
-          return res.status(404).json({ error: '验证码不存在或已使用' });
-        }
-
-        const points = codeResult.rows[0].points;
-
-        // 2. 更新验证码状态
-        await client.query(
-          `UPDATE verification_codes
-           SET status = 'used', used_at = NOW()
-           WHERE code = $1`,
-          [cleanCode]
-        );
-
-        // 3. 记录使用日志
-        await client.query(
-          `INSERT INTO usage_logs (device_id, action) VALUES ($1, $2)`,
-          [deviceId, `redeem_code:${cleanCode}`]
-        );
-
-        // 4. 更新或创建用户积分（UPSERT）
-        const creditResult = await client.query(
-          `INSERT INTO user_credits (device_id, credits) VALUES ($1, $2)
-           ON CONFLICT (device_id) DO UPDATE
-           SET credits = user_credits.credits + $2, updated_at = NOW()
-           RETURNING credits`,
-          [deviceId, points]
-        );
-
-        await client.query('COMMIT');
-
-        return res.json({
-          success: true,
-          points,
-          remaining: creditResult.rows[0].credits,
-          message: `验证成功，+${points} 点数`
-        });
-
-      } catch (err) {
+      if (codeResult.rows.length === 0) {
         await client.query('ROLLBACK');
-        throw err;
+        return res.status(404).json({ error: '验证码不存在或已使用' });
       }
-    }
 
-    return res.status(500).json({ error: '数据库未配置' });
+      const points = codeResult.rows[0].points;
+
+      // 2. 更新验证码状态
+      await client.query(
+        `UPDATE verification_codes
+         SET status = 'used', used_at = NOW()
+         WHERE code = $1`,
+        [cleanCode]
+      );
+
+      // 3. 记录使用日志
+      await client.query(
+        `INSERT INTO usage_logs (device_id, action) VALUES ($1, $2)`,
+        [deviceId, `redeem_code:${cleanCode}`]
+      );
+
+      // 4. 更新或创建用户积分（UPSERT）
+      const creditResult = await client.query(
+        `INSERT INTO user_credits (device_id, credits) VALUES ($1, $2)
+         ON CONFLICT (device_id) DO UPDATE
+         SET credits = user_credits.credits + $2, updated_at = NOW()
+         RETURNING credits`,
+        [deviceId, points]
+      );
+
+      await client.query('COMMIT');
+
+      return res.json({
+        success: true,
+        points,
+        remaining: creditResult.rows[0].credits,
+        message: `验证成功，+${points} 点数`
+      });
+
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    }
 
   } catch (error) {
     console.error('验证失败:', error);
@@ -117,13 +123,8 @@ exports.get = async (req, res) => {
         [cleanCode]
       );
       codeData = result.rows[0];
-    } else if (supabase) {
-      const { data } = await supabase
-        .from('verification_codes')
-        .select('status, points, created_at')
-        .eq('code', cleanCode)
-        .single();
-      codeData = data;
+    } else {
+      return res.status(500).json({ error: '数据库未配置' });
     }
 
     if (!codeData) {

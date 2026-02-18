@@ -2,24 +2,43 @@ const axios = require('axios');
 const { pool } = require('../db');
 
 module.exports = async (req, res) => {
+  // 检查数据库是否已配置
+  if (!pool) {
+    return res.status(500).json({ error: '数据库未配置' });
+  }
+
   const client = await pool.connect().catch(() => null);
+
+  // 如果无法获取数据库连接
+  if (!client) {
+    return res.status(500).json({ error: '数据库连接失败' });
+  }
 
   try {
     const { image, prompt, deviceId } = req.body;
 
-    // ==================== 积分检查和扣除（原子操作） ====================
+    // ==================== 积分检查和扣除（事务保护） ====================
     if (deviceId) {
-      // 使用 PostgreSQL 原子操作：检查并扣除积分
-      const result = await client.query(
-        `UPDATE user_credits
-         SET credits = credits - 1, updated_at = NOW()
-         WHERE device_id = $1 AND credits >= 1
-         RETURNING credits`,
-        [deviceId]
-      );
+      await client.query('BEGIN');
 
-      if (result.rows.length === 0) {
-        return res.status(400).json({ error: '积分不足，请先充值' });
+      try {
+        // 使用 PostgreSQL 原子操作：检查并扣除积分
+        const result = await client.query(
+          `UPDATE user_credits
+           SET credits = credits - 1, updated_at = NOW()
+           WHERE device_id = $1 AND credits >= 1
+           RETURNING credits`,
+          [deviceId]
+        );
+
+        if (result.rows.length === 0) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ error: '积分不足，请先充值' });
+        }
+
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
       }
     }
 
@@ -28,6 +47,7 @@ module.exports = async (req, res) => {
     const apiKey = process.env.API_KEY;
 
     if (!apiEndpoint || !apiKey) {
+      if (deviceId) await client.query('ROLLBACK');
       return res.status(500).json({ error: 'API配置错误' });
     }
 
@@ -45,12 +65,23 @@ module.exports = async (req, res) => {
       }
     );
 
-    // ==================== 返回生成的图片 ====================
+    // ==================== 提交事务并返回图片 ====================
+    if (deviceId) {
+      await client.query('COMMIT');
+    }
+
     const contentType = response.headers['content-type'] || 'image/jpeg';
     res.set('Content-Type', contentType);
     res.send(response.data);
 
   } catch (error) {
+    // 回滚事务
+    try {
+      if (deviceId && client) await client.query('ROLLBACK');
+    } catch (rollbackErr) {
+      console.error('Rollback error:', rollbackErr);
+    }
+
     console.error('API Error:', error.message);
 
     // 处理不同类型的错误

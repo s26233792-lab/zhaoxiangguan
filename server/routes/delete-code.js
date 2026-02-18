@@ -30,6 +30,11 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: '卡密格式无效' });
     }
 
+    // 检查数据库是否已配置
+    if (!pool) {
+      return res.status(500).json({ error: '数据库未配置' });
+    }
+
     // 从数据库删除
     const result = await pool.query('DELETE FROM verification_codes WHERE code = $1 RETURNING code', [code]);
     const deleted = result.rows.length > 0;

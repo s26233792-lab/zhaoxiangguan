@@ -14,6 +14,11 @@ exports.get = async (req, res) => {
       return res.status(400).json({ error: '设备ID格式无效' });
     }
 
+    // 检查数据库是否已配置
+    if (!pool) {
+      return res.json({ credits: 0 }); // 出错时返回0，不暴露错误
+    }
+
     const result = await pool.query(
       'SELECT credits FROM user_credits WHERE device_id = $1',
       [deviceId]
@@ -30,7 +35,17 @@ exports.get = async (req, res) => {
 
 // POST 充值积分（通过验证码）
 exports.post = async (req, res) => {
+  // 检查数据库是否已配置
+  if (!pool) {
+    return res.status(500).json({ error: '数据库未配置' });
+  }
+
   const client = await pool.connect().catch(() => null);
+
+  // 如果无法获取数据库连接
+  if (!client) {
+    return res.status(500).json({ error: '数据库连接失败' });
+  }
 
   try {
     const { deviceId, amount = 1 } = req.body;
@@ -48,19 +63,30 @@ exports.post = async (req, res) => {
       return res.status(400).json({ error: '充值金额无效' });
     }
 
-    // 使用 PostgreSQL 原子操作充值
-    const result = await client.query(
-      `INSERT INTO user_credits (device_id, credits) VALUES ($1, $2)
-       ON CONFLICT (device_id) DO UPDATE
-       SET credits = user_credits.credits + $2, updated_at = NOW()
-       RETURNING credits`,
-      [deviceId, amount]
-    );
+    // 使用事务确保原子性
+    await client.query('BEGIN');
 
-    return res.json({
-      success: true,
-      remaining: result.rows[0].credits
-    });
+    try {
+      // 使用 PostgreSQL UPSERT 操作充值
+      const result = await client.query(
+        `INSERT INTO user_credits (device_id, credits) VALUES ($1, $2)
+         ON CONFLICT (device_id) DO UPDATE
+         SET credits = user_credits.credits + $2, updated_at = NOW()
+         RETURNING credits`,
+        [deviceId, amount]
+      );
+
+      await client.query('COMMIT');
+
+      return res.json({
+        success: true,
+        remaining: result.rows[0].credits
+      });
+
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    }
 
   } catch (error) {
     console.error('充值积分失败:', error);

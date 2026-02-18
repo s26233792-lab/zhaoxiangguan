@@ -25,6 +25,16 @@ if (!pool) {
     query: async (text, params) => {
       // 模拟 SQL 查询（简化版，仅用于开发测试）
       if (text.includes('SELECT')) {
+        // 优先检查 COUNT 查询
+        if (text.includes('COUNT(*)')) {
+          if (text.includes('verification_codes')) {
+            return { rows: [{ count: Object.keys(memoryStore.verification_codes).length }] };
+          }
+          if (text.includes('user_credits')) {
+            return { rows: [{ count: Object.keys(memoryStore.user_credits).length }] };
+          }
+        }
+
         if (text.includes('verification_codes')) {
           const codes = Object.values(memoryStore.verification_codes);
           if (text.includes('WHERE code = $1')) {
@@ -35,7 +45,8 @@ if (!pool) {
             const filtered = codes.filter(c => c.status === params[0]);
             return { rows: filtered };
           }
-          return { rows: codes };
+          // 支持 ORDER BY, LIMIT, OFFSET（简化处理）
+          return { rows: codes.reverse() }; // 反转模拟 ORDER BY created_at DESC
         }
         if (text.includes('user_credits')) {
           const credits = Object.values(memoryStore.user_credits);
@@ -45,38 +56,42 @@ if (!pool) {
           }
           return { rows: credits };
         }
-        if (text.includes('COUNT(*)')) {
-          if (text.includes('verification_codes')) {
-            return { rows: [{ count: Object.keys(memoryStore.verification_codes).length }] };
-          }
-        }
         return { rows: [] };
       }
 
       if (text.includes('INSERT')) {
         if (text.includes('verification_codes')) {
-          // 解析 INSERT 语句
-          const match = text.match(/VALUES \(([^,]+),\s*(\d+),\s*'([^']+)'\)/);
-          if (match) {
-            const code = match[1];
-            const points = parseInt(match[2]);
-            memoryStore.verification_codes[code] = {
-              code,
-              points,
-              status: 'active',
-              created_at: new Date().toISOString()
-            };
-          }
+          // 使用 params 数组获取实际值
+          const code = params[0];
+          const points = params[1];
+          const status = params[2] || 'active';
+          memoryStore.verification_codes[code] = {
+            code,
+            points,
+            status,
+            created_at: new Date().toISOString()
+          };
         }
         if (text.includes('user_credits')) {
           const deviceId = params[0];
           const credits = params[1];
-          memoryStore.user_credits[deviceId] = {
-            device_id: deviceId,
-            credits: credits,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
+          const existing = memoryStore.user_credits[deviceId];
+
+          if (text.includes('ON CONFLICT') && existing) {
+            // UPSERT: 更新现有记录
+            existing.credits += credits;
+            existing.updated_at = new Date().toISOString();
+            return { rows: [{ credits: existing.credits }] };
+          } else {
+            // INSERT: 创建新记录
+            memoryStore.user_credits[deviceId] = {
+              device_id: deviceId,
+              credits: credits,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            return { rows: [{ credits: credits }] };
+          }
         }
         if (text.includes('usage_logs')) {
           memoryStore.usage_logs.push({
@@ -104,6 +119,7 @@ if (!pool) {
             memoryStore.user_credits[deviceId].updated_at = new Date().toISOString();
             return { rows: [{ credits: memoryStore.user_credits[deviceId].credits }] };
           }
+          // 如果没有找到，返回空结果（UPDATE 的 WHERE 条件未满足）
           return { rows: [] };
         }
         return { rows: [] };

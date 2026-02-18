@@ -136,32 +136,8 @@ exports.get = async (req, res) => {
 
       const result = await pool.query(listQuery, listParams);
       codes = result.rows;
-    } else if (supabase) {
-      // 先获取总数
-      let countQuery = supabase
-        .from('verification_codes')
-        .select('*', { count: 'exact', head: true });
-
-      if (status !== 'all') {
-        countQuery = countQuery.eq('status', status);
-      }
-
-      const { count } = await countQuery;
-      totalCount = count || 0;
-
-      // 构建主查询
-      let query = supabase
-        .from('verification_codes')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .range(offsetNum, offsetNum + limitNum - 1);
-
-      if (status !== 'all') {
-        query = query.eq('status', status);
-      }
-
-      const { data } = await query;
-      codes = data || [];
+    } else {
+      return res.status(500).json({ error: '数据库未配置' });
     }
 
     return res.json({
