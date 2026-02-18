@@ -155,8 +155,7 @@ class ImageService {
     };
 
     // 12API使用Gemini端点（URL参数认证）
-    // 注意：使用 -url 后缀的模型是图生图专用模型
-    const model = config.NANOBANANA_MODEL || 'gemini-3-pro-image-preview-url';
+    const model = config.NANOBANANA_MODEL || 'gemini-3-pro-image-preview';
     const endpoint = `${config.API_ENDPOINT}/v1beta/models/${model}:generateContent?key=${config.API_KEY}`;
 
     logger.info('Calling 12API NanoBanana', {
