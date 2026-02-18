@@ -179,11 +179,21 @@ class ImageService {
       // Gemini API返回JSON，需要解析图片数据
       // 响应格式: { candidates: [{ content: { parts: [{ inline_data: { data: base64 } }] } }] }
       const responseText = Buffer.from(response.data).toString('utf-8');
+
+      // 添加详细日志查看完整响应
+      logger.info('12API raw response', {
+        responseText: responseText.substring(0, 2000), // 记录前2000字符
+        responseLength: responseText.length,
+      });
+
       const jsonResponse = JSON.parse(responseText);
 
-      logger.info('12API response received', {
+      logger.info('12API parsed response', {
         responseType: typeof jsonResponse,
+        keys: Object.keys(jsonResponse),
         candidates: jsonResponse.candidates?.length,
+        hasCandidates: !!jsonResponse.candidates,
+        firstCandidateKeys: jsonResponse.candidates?.[0] ? Object.keys(jsonResponse.candidates[0]) : [],
       });
 
       // 提取图片数据
@@ -193,11 +203,18 @@ class ImageService {
           if (part.inline_data?.data) {
             // 返回base64图片数据
             const imageBuffer = Buffer.from(part.inline_data.data, 'base64');
+            logger.info('Image extracted successfully', {
+              bufferSize: imageBuffer.length,
+            });
             return imageBuffer;
           }
         }
       }
 
+      // 如果没找到图片，记录更详细的信息
+      logger.error('No image found in response', {
+        fullResponse: JSON.stringify(jsonResponse).substring(0, 1000),
+      });
       throw new APIError('API返回数据中没有找到图片');
 
     } catch (error) {
