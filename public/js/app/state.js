@@ -117,7 +117,11 @@ class Store {
     this.setState({ ui: { loading } });
   }
 
-  showToast(toast) {
+  showToast(message, type = 'info') {
+    // 兼容旧的对象格式（如果有直接调用 setState 的情况）
+    const toast = typeof message === 'object' && message.message
+      ? message
+      : { message: String(message), type };
     this.setState({ ui: { toast } });
     setTimeout(() => {
       this.setState({ ui: { toast: null } });
