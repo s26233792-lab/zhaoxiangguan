@@ -4,223 +4,134 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理后台 - 美式照相馆</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- 样式表 -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
 </head>
-<body class="admin-page">
-  <!-- 顶部导航 -->
-  <nav class="navbar">
-    <div class="container">
-      <h1 class="logo"><i class="fas fa-camera"></i> 管理后台</h1>
-      <div class="nav-right">
-        <a href="/" class="btn btn-secondary btn-small">
-          <i class="fas fa-home"></i> 返回首页
-        </a>
+<body class="admin-layout">
+  <!-- Header -->
+  <header class="admin-header">
+    <div class="container header-inner">
+      <h1 class="logo">管理后台</h1>
+      <a href="/" class="btn btn-secondary">返回首页</a>
+    </div>
+  </header>
+
+  <!-- Login Section -->
+  <section id="login-panel" class="login-section">
+    <div class="card" style="max-width: 400px; width: 100%;">
+      <h2 class="modal-title" style="text-align: center;">管理员登录</h2>
+      <p class="modal-desc" style="text-align: center;">请输入管理员密码</p>
+
+      <div class="form-group">
+        <input type="password" id="admin-password" class="form-input" placeholder="请输入密码">
+      </div>
+
+      <button id="login-btn" class="btn btn-primary" style="width: 100%;">登录</button>
+    </div>
+  </section>
+
+  <!-- Admin Panel -->
+  <section id="admin-panel" class="admin-content container" style="display: none;">
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-total-codes">0</div>
+        <div class="stat-label">总卡密数</div>
+      </div>
+      <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        <div class="stat-value" id="stat-active-codes">0</div>
+        <div class="stat-label">可用卡密</div>
+      </div>
+      <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+        <div class="stat-value" id="stat-users">0</div>
+        <div class="stat-label">用户数</div>
       </div>
     </div>
-  </nav>
 
-  <!-- 主内容区 -->
-  <main class="main-content admin-content">
-    <div class="container">
-      <!-- 登录区域 -->
-      <div id="login-panel" class="card login-panel">
-        <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
-        <h2>管理员登录</h2>
-        <div class="form-group">
-          <div class="password-wrapper">
-            <input type="password" id="admin-password" placeholder="请输入管理员密码" class="input">
-            <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
-              <i class="fas fa-eye" id="password-toggle-icon"></i>
-            </button>
-          </div>
+    <!-- Generate Codes -->
+    <div class="admin-section">
+      <h3 class="admin-section-title">生成卡密</h3>
+
+      <div id="batch-specs-container" style="margin-bottom: var(--space-md);"></div>
+
+      <div style="display: flex; gap: var(--space-sm);">
+        <button id="add-spec-btn" class="btn btn-secondary">新增规格</button>
+        <button id="generate-codes-btn" class="btn btn-primary">生成全部</button>
+      </div>
+    </div>
+
+    <!-- Code List -->
+    <div class="admin-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <h3 class="admin-section-title" style="margin-bottom: 0;">卡密管理</h3>
+        <div style="display: flex; gap: var(--space-sm);">
+          <input type="text" id="code-search" class="form-input" placeholder="搜索卡密..." style="width: 200px;">
+          <button id="refresh-btn" class="btn btn-secondary">刷新</button>
+          <button id="export-btn" class="btn btn-secondary">导出</button>
         </div>
-        <button id="login-btn" class="btn btn-primary btn-large">
-          <i class="fas fa-sign-in-alt"></i> 登录
-        </button>
       </div>
 
-      <!-- 管理面板 -->
-      <div id="admin-panel" class="hidden">
-        <!-- 统计数据 -->
-        <div class="stats-grid">
-          <div class="stat-card gradient-1">
-            <div class="stat-icon"><i class="fas fa-ticket-alt"></i></div>
-            <div class="stat-info">
-              <span class="stat-value" id="stat-total-codes">0</span>
-              <span class="stat-label">总卡密数</span>
-            </div>
-          </div>
-          <div class="stat-card gradient-2">
-            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-            <div class="stat-info">
-              <span class="stat-value" id="stat-active-codes">0</span>
-              <span class="stat-label">可用卡密</span>
-            </div>
-          </div>
-          <div class="stat-card gradient-3">
-            <div class="stat-icon"><i class="fas fa-users"></i></div>
-            <div class="stat-info">
-              <span class="stat-value" id="stat-users">0</span>
-              <span class="stat-label">用户数</span>
-            </div>
-          </div>
+      <!-- Active Codes -->
+      <div style="margin-bottom: var(--space-lg);">
+        <h4 style="font-size: var(--font-size-md); color: var(--color-text-secondary); margin-bottom: var(--space-sm);">
+          可用卡密 <span id="active-count" class="code-status code-status-active">(0)</span>
+        </h4>
+        <div style="border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead style="background: var(--color-bg-secondary);">
+              <tr>
+                <th style="padding: var(--space-sm) var(--space-md); text-align: left;">卡密</th>
+                <th style="padding: var(--space-sm) var(--space-md); text-align: center;">点数</th>
+                <th style="padding: var(--space-sm) var(--space-md); text-align: right;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="active-table-body">
+              <tr>
+                <td colspan="3" style="padding: var(--space-xl); text-align: center; color: var(--color-text-tertiary);">
+                  暂无可用卡密
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+      </div>
 
-        <!-- 生成卡密 -->
-        <div class="card">
-          <h2><i class="fas fa-plus-circle"></i> 生成卡密</h2>
-
-          <!-- 规格列表容器 -->
-          <div id="batch-specs-container">
-            <!-- 动态添加规格项 -->
-          </div>
-
-          <button id="add-spec-btn" class="btn btn-secondary">
-            <i class="fas fa-plus"></i> 新增规格
-          </button>
-
-          <hr style="margin: 16px 0; border: none; border-top: 1px solid var(--border);">
-
-          <button id="generate-codes-btn" class="btn btn-primary btn-large">
-            <i class="fas fa-magic"></i> 生成全部
-          </button>
-        </div>
-
-        <!-- 卡密管理 -->
-        <div class="card">
-          <div class="card-header">
-            <h2><i class="fas fa-list"></i> 卡密管理</h2>
-            <div class="card-actions">
-              <button id="refresh-btn" class="btn btn-secondary btn-small">
-                <i class="fas fa-sync"></i> 刷新
-              </button>
-              <button id="export-btn" class="btn btn-secondary btn-small">
-                <i class="fas fa-download"></i> 导出
-              </button>
-            </div>
-          </div>
-
-          <!-- 工具栏 -->
-          <div class="toolbar">
-            <div class="search-box">
-              <i class="fas fa-search"></i>
-              <input type="text" id="code-search" class="input" placeholder="搜索卡密或点数..." oninput="filterCodes(this.value)">
-            </div>
-          </div>
-
-          <!-- 批量操作栏 -->
-          <div id="batch-actions" class="batch-actions hidden">
-            <div class="batch-actions-info">
-              <i class="fas fa-check-square"></i>
-              <span>已选择 <strong id="selected-count">0</strong> 项</span>
-            </div>
-            <div class="batch-actions-buttons">
-              <button id="batch-delete-btn" class="btn btn-danger btn-small">
-                <i class="fas fa-trash"></i> 删除
-              </button>
-              <button id="cancel-select-btn" class="btn btn-secondary btn-small">
-                取消
-              </button>
-            </div>
-          </div>
-
-          <!-- 卡密列表 -->
-          <div class="code-list">
-            <!-- 可用卡密分区 -->
-            <div class="code-section">
-              <div class="section-header" onclick="toggleSection('active')">
-                <i class="fas fa-chevron-down section-toggle"></i>
-                <span class="section-title">可用卡密</span>
-                <span class="status-badge active" id="active-count">0</span>
-              </div>
-              <div class="section-content" id="active-section">
-                <div class="table-wrapper">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th class="checkbox-cell">
-                          <input type="checkbox" class="row-checkbox" id="select-all-active" onclick="toggleSelectAll('active')">
-                        </th>
-                        <th>卡密</th>
-                        <th class="text-center">点数</th>
-                        <th class="text-right">操作</th>
-                      </tr>
-                    </thead>
-                    <tbody id="active-table-body">
-                      <tr>
-                        <td colspan="4" class="text-center">
-                          <div class="empty-state">
-                            <i class="fas fa-inbox"></i>
-                            <h3>暂无可用卡密</h3>
-                            <p>点击上方"生成卡密"创建新的卡密</p>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <!-- 已使用卡密分区 -->
-            <div class="code-section">
-              <div class="section-header" onclick="toggleSection('used')">
-                <i class="fas fa-chevron-down section-toggle"></i>
-                <span class="section-title">已使用卡密</span>
-                <span class="status-badge used" id="used-count">0</span>
-              </div>
-              <div class="section-content" id="used-section">
-                <div class="table-wrapper">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th class="checkbox-cell">
-                          <input type="checkbox" class="row-checkbox" id="select-all-used" onclick="toggleSelectAll('used')">
-                        </th>
-                        <th>卡密</th>
-                        <th class="text-center">点数</th>
-                        <th>使用时间</th>
-                        <th class="text-right">操作</th>
-                      </tr>
-                    </thead>
-                    <tbody id="used-table-body">
-                      <tr>
-                        <td colspan="5" class="text-center">
-                          <div class="empty-state">
-                            <i class="fas fa-inbox"></i>
-                            <h3>暂无已使用卡密</h3>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
+      <!-- Used Codes -->
+      <div>
+        <h4 style="font-size: var(--font-size-md); color: var(--color-text-secondary); margin-bottom: var(--space-sm);">
+          已使用卡密 <span id="used-count" class="code-status code-status-used">(0)</span>
+        </h4>
+        <div style="border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead style="background: var(--color-bg-secondary);">
+              <tr>
+                <th style="padding: var(--space-sm) var(--space-md); text-align: left;">卡密</th>
+                <th style="padding: var(--space-sm) var(--space-md); text-align: center;">点数</th>
+                <th style="padding: var(--space-sm) var(--space-md); text-align: left;">使用时间</th>
+                <th style="padding: var(--space-sm) var(--space-md); text-align: right;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="used-table-body">
+              <tr>
+                <td colspan="4" style="padding: var(--space-xl); text-align: center; color: var(--color-text-tertiary);">
+                  暂无已使用卡密
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-  </main>
+  </section>
 
-  <!-- Toast 容器 -->
+  <!-- Toast Container -->
   <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 4000; display: flex; flex-direction: column; gap: 10px;"></div>
 
-  <script src="app.js"></script>
-  <script>
-    // 密码显示切换
-    function togglePasswordVisibility() {
-      const input = document.getElementById('admin-password');
-      const icon = document.getElementById('password-toggle-icon');
-      if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.replace('fa-eye', 'fa-eye-slash');
-      } else {
-        input.type = 'password';
-        icon.classList.replace('fa-eye-slash', 'fa-eye');
-      }
-    }
-  </script>
+  <!-- App Entry Point -->
+  <script type="module" src="js/admin/main.js"></script>
 </body>
 </html>

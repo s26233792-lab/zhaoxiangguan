@@ -3,240 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="美式照相馆 - AI智能生成专业职场肖像照">
   <title>美式照相馆 - AI图片生成</title>
-  <link rel="stylesheet" href="style-optimized.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- 样式表 -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
 </head>
 <body>
-  <!-- 跳过主内容链接（无障碍） -->
-  <a href="#main-content" class="skip-link">跳到主内容</a>
-
-  <!-- 顶部导航 -->
-  <nav class="navbar">
-    <div class="container">
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-inner">
       <a href="/" class="logo">
-        <div class="logo-icon">
-          <svg viewBox="0 0 24 24">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-            <circle cx="12" cy="13" r="4"/>
-          </svg>
-        </div>
-        <div class="logo-text">
-          <span class="logo-title">美式照相馆</span>
-          <span class="logo-subtitle">AMERICAN STUDIO</span>
-        </div>
+        美式照相馆<span>.</span>
       </a>
-      <div class="nav-right">
-        <span class="credit-display">
-          <i class="fas fa-coins"></i>
-          <span id="credit-count">0</span> 点数
-        </span>
+
+      <div class="nav-actions">
+        <div class="credits-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="10"/>
+            <text x="12" y="16" text-anchor="middle" font-size="12" fill="#fff">C</text>
+          </svg>
+          <span id="creditsDisplay">0</span>
+        </div>
+        <button id="rechargeBtn" class="btn btn-secondary">充值</button>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <!-- 主内容区 -->
-  <main id="main-content" class="main-content page-transition">
-    <div class="container">
-      <!-- 积分充值模态框 -->
-      <div id="credit-modal" class="modal hidden">
-        <div class="modal-content">
-          <h3>充值点数</h3>
-          <p>请输入验证码充值点数</p>
-          <input type="text" id="code-input" placeholder="请输入验证码" maxlength="20">
-          <button id="redeem-btn" class="btn btn-primary">充值</button>
-          <button onclick="closeModal('credit-modal')" class="btn btn-secondary">取消</button>
-        </div>
-      </div>
+  <!-- Main Content -->
+  <main class="container">
+    <!-- Hero Section -->
+    <section class="hero">
+      <h1 class="hero-title">AI生成美式专业肖像照</h1>
+      <p class="hero-subtitle">上传照片，选择风格，一键生成高质量职场照片</p>
+    </section>
 
-      <!-- 左侧：设置面板 -->
-      <div class="left-panel">
-        <!-- 照片上传 -->
-        <div class="card">
-          <div class="card-header">
-            <h2>照片上传</h2>
-            <span class="step-badge">Step 1</span>
-          </div>
+    <!-- Size Selector -->
+    <div class="ratio-selector">
+      <button class="ratio-btn active" data-ratio="1:1">
+        <span>1:1 正方形</span>
+      </button>
+      <button class="ratio-btn" data-ratio="3:4">
+        <span>3:4 竖版</span>
+      </button>
+      <button class="ratio-btn" data-ratio="5:7">
+        <span>5:7 美式职业</span>
+      </button>
+    </div>
 
-          <!-- 尺寸选择 -->
-          <div class="size-selector">
-            <button class="size-btn active" data-ratio="1" onclick="selectSize(this, 1)">
-              <span>1:1</span>
-              <small>护照/签证</small>
-            </button>
-            <button class="size-btn" data-ratio="0.75" onclick="selectSize(this, 0.75)">
-              <span>3:4</span>
-              <small>标准2寸</small>
-            </button>
-            <button class="size-btn" data-ratio="0.714" onclick="selectSize(this, 0.714)">
-              <span>5:7</span>
-              <small>标准1寸</small>
-            </button>
-          </div>
+    <!-- Workspace -->
+    <div class="workspace">
+      <!-- Left Column -->
+      <div class="workspace-left">
+        <!-- Photo Uploader -->
+        <div data-component="uploader"></div>
 
-          <div id="upload-wrapper" class="upload-wrapper">
-            <input type="file" id="file-input" accept="image/*" hidden>
-            <div id="preview-upload" class="preview hidden">
-              <img id="preview-img" src="" alt="预览">
-              <button id="remove-image" class="remove-btn" title="移除图片">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <div id="upload-placeholder" class="upload-placeholder">
-              <i class="fas fa-cloud-upload-alt"></i>
-              <p>点击或拖拽上传图片</p>
-              <span class="hint">自动人像居中裁剪</span>
-            </div>
-          </div>
-        </div>
+        <!-- Style Panel -->
+        <div data-component="style-panel"></div>
 
-        <!-- 风格定制 -->
-        <div class="card">
-          <div class="card-header">
-            <h2>风格定制</h2>
-            <span class="step-badge">Step 2</span>
-          </div>
-
-          <div class="style-section">
-            <!-- 拍摄角度 -->
-            <div class="option-group">
-              <label>拍摄角度</label>
-              <div class="option-grid">
-                <button class="option-btn angle-btn active" data-type="angle" data-value="front" onclick="selectOption('angle', this, 'front')">
-                  <div class="icon-box"><i class="fa-regular fa-id-badge"></i></div>
-                  <span>正面对视</span>
-                </button>
-                <button class="option-btn angle-btn" data-type="angle" data-value="tilted" onclick="selectOption('angle', this, 'tilted')">
-                  <div class="icon-box"><i class="fa-solid fa-user-tag"></i></div>
-                  <span>微侧展示</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- 肤色处理 -->
-            <div class="option-group">
-              <label>肤色处理</label>
-              <div class="option-grid">
-                <button class="option-btn skin-btn active" data-type="skin" data-value="beautify" onclick="selectOption('skin', this, 'beautify')">
-                  <div class="icon-box"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                  <span>轻微美颜</span>
-                </button>
-                <button class="option-btn skin-btn" data-type="skin" data-value="natural" onclick="selectOption('skin', this, 'natural')">
-                  <div class="icon-box"><i class="fa-solid fa-camera"></i></div>
-                  <span>自然真实</span>
-                </button>
-              </div>
-              <p class="option-desc" id="skin-desc">轻微美颜，肤色提亮</p>
-            </div>
-
-            <!-- 智能换装 -->
-            <div class="option-group">
-              <label>智能换装</label>
-              <div class="clothing-list">
-                <button class="clothing-btn active" data-type="clothing" data-value="Business Formal" onclick="selectOption('clothing', this, 'Business Formal')">
-                  <div class="icon-box"><i class="fa-solid fa-user-tie"></i></div>
-                  <div class="clothing-info">
-                    <span class="clothing-name">商务正装</span>
-                    <span class="clothing-detail">高端西装 / 职业套装</span>
-                  </div>
-                </button>
-                <button class="clothing-btn" data-type="clothing" data-value="Business Casual" onclick="selectOption('clothing', this, 'Business Casual')">
-                  <div class="icon-box"><i class="fa-solid fa-user"></i></div>
-                  <div class="clothing-info">
-                    <span class="clothing-name">商务休闲</span>
-                    <span class="clothing-detail">衬衫 / 休闲西装</span>
-                  </div>
-                </button>
-                <button class="clothing-btn" data-type="clothing" data-value="Academic Doctoral Regalia" onclick="selectOption('clothing', this, 'Academic Doctoral Regalia')">
-                  <div class="icon-box"><i class="fa-solid fa-graduation-cap"></i></div>
-                  <div class="clothing-info">
-                    <span class="clothing-name">美式博士</span>
-                    <span class="clothing-detail">PhD 礼袍 / 绒面垂布</span>
-                  </div>
-                </button>
-                <button class="clothing-btn" data-type="clothing" data-value="Keep Original" onclick="selectOption('clothing', this, 'Keep Original')">
-                  <div class="icon-box"><i class="fa-solid fa-shirt"></i></div>
-                  <div class="clothing-info">
-                    <span class="clothing-name">保持原样</span>
-                    <span class="clothing-detail">仅优化光影，不换装</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            <!-- 背景色调 -->
-            <div class="option-group">
-              <label>背景色调</label>
-              <div class="color-selector">
-                <div class="color-swatch active" data-color="Studio White" data-name="纯净白" style="background: #ffffff; border: 1px solid #e2e8f0;" onclick="selectColor(this, 'Studio White', '纯净白')"></div>
-                <div class="color-swatch" data-color="Classic Grey" data-name="经典灰" style="background: #f1f5f9; border: 1px solid #e2e8f0;" onclick="selectColor(this, 'Classic Grey', '经典灰')"></div>
-                <div class="color-swatch" data-color="Deep Navy Blue" data-name="海军蓝" style="background: #1e3a8a; border: 1px solid #e2e8f0;" onclick="selectColor(this, 'Deep Navy Blue', '海军蓝')"></div>
-                <div class="color-swatch" data-color="Professional Warm Tone" data-name="暖色调" style="background: #fef3c7; border: 1px solid #e2e8f0;" onclick="selectColor(this, 'Professional Warm Tone', '暖色调')"></div>
-              </div>
-              <input type="hidden" id="selected-color" value="Studio White">
-              <p class="color-name" id="color-name">当前: 纯净白</p>
-            </div>
-
-            <!-- 生成按钮 -->
-            <button id="generate-btn" class="btn btn-primary btn-large">
-              <span>生成证件照</span> <i class="fas fa-wand-magic-sparkles"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 右侧：结果区域 -->
-      <div class="right-panel">
-        <div class="card">
-          <h2>生成结果</h2>
-
-          <!-- 加载状态 -->
-          <div id="loading-state" class="loading-state hidden">
-            <div class="progress-container">
-              <div class="progress-bar">
-                <div id="progress-bar" class="progress-fill"></div>
-              </div>
-              <span id="percent-text" class="percent-text">0%</span>
-            </div>
-
-            <!-- 骨架屏预览 -->
-            <div class="skeleton-preview" style="margin: 24px 0;">
-              <div class="skeleton skeleton-image"></div>
-            </div>
-
-            <p id="loading-tip" class="loading-tip">正在生成中</p>
-          </div>
-
-          <!-- 结果展示 -->
-          <div id="result-container" class="result-container">
-            <div id="result-placeholder" class="result-placeholder">
-              <i class="fas fa-image"></i>
-              <p>生成的图片将显示在这里</p>
-            </div>
-            <div id="result-image-wrapper" class="result-image-wrapper hidden">
-              <img id="result-image" class="result-image" alt="生成的图片">
-            </div>
-          </div>
-
-          <!-- 下载按钮 -->
-          <button id="download-btn" class="btn btn-secondary btn-large" disabled>
-            <i class="fas fa-download"></i> <span>下载图片</span>
+        <!-- Generate Button -->
+        <div class="generate-section">
+          <button id="generateBtn" class="btn btn-primary">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            生成照片
           </button>
         </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="workspace-right">
+        <!-- Result View -->
+        <div data-component="result-view"></div>
       </div>
     </div>
   </main>
 
-  <!-- 提示消息 -->
-  <div id="status-message" class="status-message hidden">
-    <span id="status-text"></span>
-  </div>
+  <!-- Credit Modal -->
+  <div data-component="credit-modal"></div>
 
-  <!-- 返回顶部按钮 -->
-  <button id="scroll-to-top" class="scroll-to-top" aria-label="返回顶部">
-    <i class="fas fa-arrow-up"></i>
-  </button>
-
-  <script src="app.js"></script>
+  <!-- App Entry Point -->
+  <script type="module" src="js/app/main.js"></script>
 </body>
 </html>

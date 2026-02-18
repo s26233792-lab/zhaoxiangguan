@@ -1,126 +1,54 @@
+/**
+ * 美式照相馆 - 服务器入口
+ */
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+const config = require('./config/env');
+const { healthCheck } = require('./config/database');
+const { initDatabase } = require('../database/init-db');
+const logger = require('./utils/logger');
 
+// 导入中间件
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+
+// 导入路由
+const apiRoutes = require('./routes');
+
+// 创建 Express 应用
 const app = express();
 
-// ==================== 安全中间件 ====================
+// ==================== 基础中间件 ====================
 
-// 通用限流 - 防止 DDoS
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15分钟
-  max: 100, // 每个IP最多100个请求
-  message: { error: '请求过于频繁，请稍后再试' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// 图片生成限流 - 更严格
-const generateLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1分钟
-  max: 10, // 每分钟最多10次
-  message: { error: '生成图片过于频繁，请稍后再试' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// 管理后台限流
-const adminLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15分钟
-  max: 50, // 每个IP最多50个请求
-  message: { error: '管理后台请求过于频繁' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// 基础中间件
 app.use(cors());
 app.use(express.json({
-  limit: '3mb', // 减小请求体大小限制
-  strict: true // 严格解析，防止攻击
+  limit: '3mb',
+  strict: true,
 }));
 app.use(express.static('public'));
 
-// ==================== 请求验证中间件 ====================
-
-// 验证请求数据格式
-function validateGenerateRequest(req, res, next) {
-  const { image, prompt, deviceId } = req.body;
-
-  // 验证必需字段
-  if (!image) {
-    return res.status(400).json({ error: '请上传图片' });
-  }
-
-  if (!prompt || typeof prompt !== 'string') {
-    return res.status(400).json({ error: '请提供有效的风格描述' });
-  }
-
-  // 验证图片大小（base64后大约不超过3MB）
-  if (image.length > 4 * 1024 * 1024) {
-    return res.status(400).json({ error: '图片过大，请上传小于3MB的图片' });
-  }
-
-  // 验证图片格式
-  if (!image.match(/^data:image\/(jpeg|jpg|png|webp);base64,/)) {
-    return res.status(400).json({ error: '图片格式不支持，请上传 JPG/PNG/WEBP 格式' });
-  }
-
-  // 验证 prompt 长度
-  if (prompt.length > 500) {
-    return res.status(400).json({ error: '风格描述过长' });
-  }
-
-  // 验证 deviceId 格式
-  if (deviceId && (typeof deviceId !== 'string' || deviceId.length > 100)) {
-    return res.status(400).json({ error: '设备ID格式无效' });
-  }
-
+// 请求日志
+app.use((req, res, next) => {
+  logger.request(req);
   next();
-}
-
-// 验证管理员密码
-function validateAdminPassword(req, res, next) {
-  // 支持从请求体或查询参数获取密码（GET请求用query，POST请求用body）
-  const adminPassword = req.body?.adminPassword || req.query?.adminPassword;
-  const envPassword = process.env.ADMIN_PASSWORD;
-
-  if (!envPassword) {
-    console.error('ADMIN_PASSWORD not configured');
-    return res.status(500).json({ error: '服务器配置错误' });
-  }
-
-  if (!adminPassword || adminPassword !== envPassword) {
-    return res.status(401).json({ error: '管理员密码错误' });
-  }
-
-  next();
-}
+});
 
 // ==================== API 路由 ====================
 
-// 公开API（限流）
-app.get('/api/credits', generalLimiter, require('./routes/credits').get);
-app.get('/api/verify-code', generalLimiter, require('./routes/verify-code').get);
-app.post('/api/verify-code', generalLimiter, require('./routes/verify-code').post);
+// 统一API前缀
+app.use('/api', apiRoutes);
 
-// 需要积分的API（严格限流 + 验证）
-app.post('/api/generate', generateLimiter, validateGenerateRequest, require('./routes/generate'));
+// ==================== 健康检查 ====================
 
-// 管理员API（严格限流 + 密码验证）
-app.post('/api/generate-codes', adminLimiter, validateAdminPassword, require('./routes/generate-codes').post);
-app.get('/api/generate-codes', adminLimiter, validateAdminPassword, require('./routes/generate-codes').get);
-app.get('/api/stats', adminLimiter, validateAdminPassword, require('./routes/stats'));
-app.post('/api/delete-code', adminLimiter, validateAdminPassword, require('./routes/delete-code'));
+app.get('/health', async (req, res) => {
+  const dbHealth = await healthCheck();
 
-// 健康检查端点（无限制）
-app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    environment: config.NODE_ENV,
+    database: dbHealth,
   });
 });
 
@@ -137,33 +65,53 @@ app.get('*', (req, res) => {
 // ==================== 错误处理 ====================
 
 // 404 处理
-app.use((req, res) => {
-  res.status(404).json({ error: '请求的资源不存在' });
-});
+app.use(notFoundHandler);
 
 // 全局错误处理
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-
-  // 请求体过大
-  if (err.type === 'entity.too.large') {
-    return res.status(413).json({ error: '请求体过大' });
-  }
-
-  // JSON 解析错误
-  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-    return res.status(400).json({ error: '请求数据格式错误' });
-  }
-
-  // 默认错误
-  res.status(500).json({ error: '服务器内部错误' });
-});
+app.use(errorHandler);
 
 // ==================== 启动服务器 ====================
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Rate limiting enabled`);
-});
+async function start() {
+  const PORT = config.PORT;
+
+  try {
+    // 初始化数据库（如果配置了DATABASE_URL）
+    if (config.hasDatabase()) {
+      await initDatabase();
+    }
+
+    // 启动服务器
+    app.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT}`);
+      logger.info(`Environment: ${config.NODE_ENV}`);
+      logger.info(`Health check: http://localhost:${PORT}/health`);
+
+      if (config.isDevelopment()) {
+        logger.info(`Admin panel: http://localhost:${PORT}/admin`);
+      }
+    });
+
+  } catch (err) {
+    logger.error('Failed to start server', err);
+    process.exit(1);
+  }
+}
+
+// 优雅关闭
+async function shutdown() {
+  logger.info('Shutting down gracefully...');
+
+  const { closePool } = require('./config/database');
+  await closePool();
+
+  process.exit(0);
+}
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
+// 启动
+start();
+
+module.exports = app;
