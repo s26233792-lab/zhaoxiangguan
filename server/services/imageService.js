@@ -70,29 +70,31 @@ class ImageService {
         }
       }
 
-      // API错误特殊处理
-      if (err.response) {
-        const status = err.response.status;
-        const message = this.getAPIErrorMessage(status);
-
-        logger.error('External API error', {
-          status,
-          message: err.response.data?.toString || err.message,
-        });
-
-        throw new APIError(message);
+      // 如果已经是 APIError 或 NotFoundError，直接抛出
+      if (err instanceof APIError || err instanceof NotFoundError) {
+        throw err;
       }
 
-      // 网络错误
+      // 网络错误处理
       if (err.code === 'ECONNABORTED') {
-        throw new APIError('API请求超时，请稍后重试');
+        throw new APIError('API请求超时，请稍后重��或减少图片大小');
       }
 
       if (err.code === 'ECONNREFUSED') {
         throw new APIError('图片生成服务暂时不可用');
       }
 
-      throw err;
+      if (err.code === 'ENOTFOUND' || err.code === 'ECONNRESET') {
+        throw new APIError('网络连接失败，请检查网络或稍后重试');
+      }
+
+      // 其他未处理的错误
+      logger.error('Unexpected error in generateImage', {
+        message: err.message,
+        code: err.code,
+        stack: err.stack,
+      });
+      throw new APIError('图片生成失败，请稍后重试');
 
     } finally {
       if (client) client.release();
@@ -172,7 +174,7 @@ class ImageService {
             'Content-Type': 'application/json',
           },
           responseType: 'arraybuffer',
-          timeout: config.API_TIMEOUT || 120000, // 图片生成可能需要更长时间
+          timeout: 300000, // 5分钟超时
         }
       );
 
@@ -284,18 +286,31 @@ class ImageService {
           statusText: error.response.statusText,
           response: responseData.substring(0, 1000),
         });
+
+        // 抛出有意义的错误信息
+        const errorMsg = responseData || `HTTP ${error.response.status}`;
+        throw new APIError(`图片生成失败: ${errorMsg.substring(0, 200)}`);
+
       } else if (error.request) {
-        logger.error('12API request failed', {
+        // 请求已发出但没有收到响应
+        logger.error('12API request failed - no response', {
           code: error.code,
           message: error.message,
         });
+
+        if (error.code === 'ECONNABORTED') {
+          throw new APIError('图片生成超时，请稍后重试或减少图片大小');
+        }
+        throw new APIError(`网络错误: ${error.message}`);
+
       } else {
+        // 请求设置出错
         logger.error('12API setup error', {
           message: error.message,
           stack: error.stack,
         });
+        throw new APIError(`请求配置错误: ${error.message}`);
       }
-      throw error;
     }
   }
 
