@@ -154,11 +154,15 @@ class ImageService {
       ]
     };
 
-    // 12API使用Gemini端点（URL参数认证）
+    // Gemini端点（URL参数认证）
     const model = config.NANOBANANA_MODEL || 'gemini-3-pro-image-preview';
-    const endpoint = `${config.API_ENDPOINT}/v1beta/models/${model}:generateContent?key=${config.API_KEY}`;
 
-    logger.info('Calling 12API NanoBanana', {
+    // 处理API_ENDPOINT，移除可能存在的/v1或/v1beta后缀
+    let baseUrl = config.API_ENDPOINT.replace(/\/+$/, '');
+    baseUrl = baseUrl.replace(/\/v1beta$|\/v1$/, '');
+    const endpoint = `${baseUrl}/v1beta/models/${model}:generateContent?key=${config.API_KEY}`;
+
+    logger.info('Calling Gemini-format API', {
       endpoint,
       model,
       promptLength: prompt?.length,
@@ -183,14 +187,14 @@ class ImageService {
       const responseText = Buffer.from(response.data).toString('utf-8');
 
       // 添加详细日志查看完整响应
-      logger.info('12API raw response', {
+      logger.info('API raw response', {
         responseText: responseText.substring(0, 2000), // 记录前2000字符
         responseLength: responseText.length,
       });
 
       const jsonResponse = JSON.parse(responseText);
 
-      logger.info('12API parsed response', {
+      logger.info('API parsed response', {
         responseType: typeof jsonResponse,
         keys: Object.keys(jsonResponse),
         candidates: jsonResponse.candidates?.length,
@@ -198,58 +202,29 @@ class ImageService {
         firstCandidateKeys: jsonResponse.candidates?.[0] ? Object.keys(jsonResponse.candidates[0]) : [],
       });
 
-      // 提取图片数据 - 支持多种响应格式
+      // 提取图片数据 - Gemini标准格式
       let imageBuffer = null;
       let extractionMethod = '';
 
       // 格式1: 标准 Gemini 格式 candidates[0].content.parts[].inline_data.data
       if (jsonResponse.candidates?.[0]?.content?.parts) {
         for (const part of jsonResponse.candidates[0].content.parts) {
-          if (part.inline_data?.data) {
-            imageBuffer = Buffer.from(part.inline_data.data, 'base64');
+          if (part.inlineData?.data) {
+            imageBuffer = Buffer.from(part.inlineData.data, 'base64');
             extractionMethod = 'gemini-standard';
             break;
           }
         }
       }
 
-      // 格式2: 直接在 data 字段（base64字符串）
-      if (!imageBuffer && jsonResponse.data) {
-        try {
-          imageBuffer = Buffer.from(jsonResponse.data, 'base64');
-          extractionMethod = 'direct-data';
-        } catch (e) {
-          logger.warn('Failed to parse data field as base64', { error: e.message });
-        }
-      }
-
-      // 格式3: 在 image 字段（base64字符串）
-      if (!imageBuffer && jsonResponse.image) {
-        try {
-          imageBuffer = Buffer.from(jsonResponse.image, 'base64');
-          extractionMethod = 'image-field';
-        } catch (e) {
-          logger.warn('Failed to parse image field as base64', { error: e.message });
-        }
-      }
-
-      // 格式4: 在 result.image 字段
-      if (!imageBuffer && jsonResponse.result?.image) {
-        try {
-          imageBuffer = Buffer.from(jsonResponse.result.image, 'base64');
-          extractionMethod = 'result-image';
-        } catch (e) {
-          logger.warn('Failed to parse result.image field as base64', { error: e.message });
-        }
-      }
-
-      // 格式5: 在 output.data 字段
-      if (!imageBuffer && jsonResponse.output?.data) {
-        try {
-          imageBuffer = Buffer.from(jsonResponse.output.data, 'base64');
-          extractionMethod = 'output-data';
-        } catch (e) {
-          logger.warn('Failed to parse output.data field as base64', { error: e.message });
+      // 兼容格式: candidates[0].content.parts[].inline_data.data (驼峰命名)
+      if (!imageBuffer && jsonResponse.candidates?.[0]?.content?.parts) {
+        for (const part of jsonResponse.candidates[0].content.parts) {
+          if (part.inline_data?.data) {
+            imageBuffer = Buffer.from(part.inline_data.data, 'base64');
+            extractionMethod = 'gemini-camelCase';
+            break;
+          }
         }
       }
 
@@ -266,10 +241,6 @@ class ImageService {
       logger.error('No image found in any expected format', {
         responseKeys: Object.keys(jsonResponse),
         hasCandidates: !!jsonResponse.candidates,
-        hasData: !!jsonResponse.data,
-        hasImage: !!jsonResponse.image,
-        hasResult: !!jsonResponse.result,
-        hasOutput: !!jsonResponse.output,
         fullResponse: JSON.stringify(jsonResponse).substring(0, 2000),
       });
       throw new APIError('API返回数据中没有找到图片，响应格式可能已变更');
@@ -281,7 +252,7 @@ class ImageService {
           ? Buffer.from(error.response.data).toString('utf-8')
           : 'no data';
 
-        logger.error('12API error response', {
+        logger.error('API error response', {
           status: error.response.status,
           statusText: error.response.statusText,
           response: responseData.substring(0, 1000),
@@ -313,7 +284,7 @@ class ImageService {
 
       } else if (error.request) {
         // 请求已发出但没有收到响应
-        logger.error('12API request failed - no response', {
+        logger.error('API request failed - no response', {
           code: error.code,
           message: error.message,
         });
@@ -325,7 +296,7 @@ class ImageService {
 
       } else {
         // 请求设置出错
-        logger.error('12API setup error', {
+        logger.error('API setup error', {
           message: error.message,
           stack: error.stack,
         });
