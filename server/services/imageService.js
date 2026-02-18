@@ -114,54 +114,117 @@ class ImageService {
       throw new APIError('API配置错误，请联系管理员');
     }
 
-    logger.info('Calling external image API', {
-      endpoint: config.API_ENDPOINT,
-      imageSize: imageBase64?.length,
+    // 提取base64数据（去掉data:image/xxx;base64,前缀）
+    const base64Data = imageBase64.includes('base64,')
+      ? imageBase64.split('base64,')[1]
+      : imageBase64;
+
+    // 检测图片类型
+    const mimeTypes = {
+      'data:image/jpeg': 'image/jpeg',
+      'data:image/jpg': 'image/jpeg',
+      'data:image/png': 'image/png',
+      'data:image/webp': 'image/webp',
+    };
+
+    let mimeType = 'image/jpeg';
+    for (const [dataUri, mime] of Object.entries(mimeTypes)) {
+      if (imageBase64.startsWith(dataUri)) {
+        mimeType = mime;
+        break;
+      }
+    }
+
+    // 构建Gemini格式请求
+    const requestBody = {
+      contents: [
+        {
+          parts: [
+            { text: prompt },
+            {
+              inline_data: {
+                mime_type: mimeType,
+                data: base64Data
+              }
+            }
+          ]
+        }
+      ]
+    };
+
+    // 12API使用Gemini端点
+    const model = config.NANOBANANA_MODEL || 'gemini-3-pro-image-preview';
+    const endpoint = `${config.API_ENDPOINT}/v1beta/models/${model}:generateContent`;
+
+    logger.info('Calling 12API NanoBanana', {
+      endpoint,
+      model,
       promptLength: prompt?.length,
+      imageSize: base64Data?.length,
     });
 
     try {
       const response = await axios.post(
-        config.API_ENDPOINT,
-        { image: imageBase64, prompt },
+        endpoint,
+        requestBody,
         {
           headers: {
             'Authorization': `Bearer ${config.API_KEY}`,
             'Content-Type': 'application/json',
           },
           responseType: 'arraybuffer',
-          timeout: config.API_TIMEOUT || 60000,
+          timeout: config.API_TIMEOUT || 120000, // 图片生成可能需要更长时间
         }
       );
 
-      logger.info('External API response received', {
-        status: response.status,
-        contentType: response.headers['content-type'],
-        dataSize: response.data?.length,
+      // Gemini API返回JSON，需要解析图片数据
+      // 响应格式: { candidates: [{ content: { parts: [{ inline_data: { data: base64 } }] } }] }
+      const responseText = Buffer.from(response.data).toString('utf-8');
+      const jsonResponse = JSON.parse(responseText);
+
+      logger.info('12API response received', {
+        responseType: typeof jsonResponse,
+        candidates: jsonResponse.candidates?.length,
       });
 
-      return response.data;
+      // 提取图片数据
+      if (jsonResponse.candidates &&
+          jsonResponse.candidates[0]?.content?.parts) {
+        for (const part of jsonResponse.candidates[0].content.parts) {
+          if (part.inline_data?.data) {
+            // 返回base64图片数据
+            const imageBuffer = Buffer.from(part.inline_data.data, 'base64');
+            return imageBuffer;
+          }
+        }
+      }
+
+      throw new APIError('API返回数据中没有找到图片');
+
     } catch (error) {
       // 详细记录axios错误
       if (error.response) {
-        logger.error('External API returned error response', {
+        const responseData = error.response.data
+          ? Buffer.from(error.response.data).toString('utf-8')
+          : 'no data';
+
+        logger.error('12API error response', {
           status: error.response.status,
           statusText: error.response.statusText,
-          headers: error.response.headers,
-          data: error.response.data ? Buffer.from(error.response.data).toString('utf-8').substring(0, 500) : 'no data',
+          response: responseData.substring(0, 1000),
         });
       } else if (error.request) {
-        logger.error('External API request failed (no response)', {
+        logger.error('12API request failed', {
           code: error.code,
           message: error.message,
         });
       } else {
-        logger.error('External API request setup error', {
+        logger.error('12API setup error', {
           message: error.message,
           stack: error.stack,
         });
       }
-      throw error; // 重新抛出，由外层catch处理
+      throw error;
     }
   }
 

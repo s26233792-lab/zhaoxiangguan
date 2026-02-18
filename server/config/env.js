@@ -15,6 +15,7 @@ const config = {
   API_ENDPOINT: process.env.API_ENDPOINT,
   API_KEY: process.env.API_KEY,
   API_TIMEOUT: parseInt(process.env.API_TIMEOUT) || 60000,
+  NANOBANANA_MODEL: process.env.NANOBANANA_MODEL || 'gemini-3-pro-image-preview',
 
   // 管理员配置
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
