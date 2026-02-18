@@ -196,6 +196,7 @@ class APIService {
     const { signal } = requestOptions;
 
     return this.request(config.endpoints.generate, {
+      method: 'POST',
       image: imageBase64,
       prompt,
       deviceId,
