@@ -77,6 +77,20 @@
   color: var(--color-text-tertiary);
 }
 
+.form-hint {
+  margin-top: var(--space-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.form-hint-warning {
+  color: var(--color-warning);
+}
+
+.form-hint-success {
+  color: var(--color-success);
+}
+
 /* ==================== 卡片 ==================== */
 .card {
   background-color: var(--color-surface);
@@ -221,10 +235,33 @@
 }
 
 .modal-result {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   margin-top: var(--space-sm);
+}
+
+.modal-result-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.modal-result-content {
+  flex: 1;
+}
+
+.modal-result-message {
+  font-weight: var(--font-weight-medium);
+}
+
+.modal-result-suggestion {
+  margin-top: var(--space-xs);
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
 }
 
 .modal-result-success {
@@ -413,3 +450,42 @@
 .stagger-in > *:nth-child(2) { animation: fadeInUp 0.4s ease-out 0.2s both; }
 .stagger-in > *:nth-child(3) { animation: fadeInUp 0.4s ease-out 0.3s both; }
 .stagger-in > *:nth-child(4) { animation: fadeInUp 0.4s ease-out 0.4s both; }
+
+/* ==================== 风格选项增强 ==================== */
+.style-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.style-option.active .style-icon {
+  color: var(--color-primary);
+}
+
+.color-preview {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  border: 2px solid;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+}
+
+.style-option-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.style-option-label {
+  font-weight: var(--font-weight-medium);
+}
+
+.style-option-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: 1.3;
+}
