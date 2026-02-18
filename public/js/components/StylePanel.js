@@ -19,6 +19,19 @@ export class StylePanel {
       <div class="style-panel">
         <h3 class="panel-title">风格定制</h3>
 
+        <!-- 图片比例 -->
+        <div class="style-group">
+          <label class="style-label">图片比例</label>
+          <div class="style-options ratio-options">
+            ${Object.values(config.aspectRatios).map(opt => `
+              <button class="style-option ${options.aspectRatio === opt.value ? 'active' : ''}"
+                      data-type="aspectRatio" data-value="${opt.value}">
+                ${opt.label}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
         <!-- 拍摄角度 -->
         <div class="style-group">
           <label class="style-label">拍摄角度</label>
@@ -88,7 +101,25 @@ export class StylePanel {
 
         // 更新状态
         store.setGenerateOption(type, value);
+
+        // 如果是比例变化，需要更新上传器的比例
+        if (type === 'aspectRatio') {
+          this.updateUploaderRatio(value);
+        }
       });
     });
+  }
+
+  /**
+   * 更新上传器的比例
+   */
+  updateUploaderRatio(ratio) {
+    const uploaderContainer = document.querySelector('[data-component="uploader"]');
+    if (uploaderContainer) {
+      const uploader = uploaderContainer.querySelector('.photo-uploader');
+      if (uploader) {
+        uploader.dataset.ratio = ratio;
+      }
+    }
   }
 }

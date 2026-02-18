@@ -4,6 +4,10 @@
 import { config } from '../app/config.js';
 import { store } from '../app/state.js';
 
+// 图片尺寸限制
+const MIN_DIMENSION = 512;
+const MAX_DIMENSION = 4096;
+
 export class PhotoUploader {
   constructor(container, options = {}) {
     this.container = container;
@@ -37,7 +41,11 @@ export class PhotoUploader {
               <polyline points="21 15 16 10 5 21"></polyline>
             </svg>
             <p class="upload-text">点击上传或拖拽图片到这里</p>
-            <p class="upload-hint">支持 JPG、PNG、WEBP 格式，最大 4MB</p>
+            <div class="upload-hints">
+              <p>• 支持格式：JPG、PNG、WEBP</p>
+              <p>• 文件大小：≤ 4MB</p>
+              <p>• 推荐尺寸：${MIN_DIMENSION}x${MIN_DIMENSION} ~ ${MAX_DIMENSION}x${MAX_DIMENSION} 像素</p>
+            </div>
           </div>
           <div class="upload-preview" id="previewArea" style="display: none;">
             <img id="previewImage" src="" alt="预览">
@@ -103,7 +111,7 @@ export class PhotoUploader {
     });
   }
 
-  handleFileSelect(file) {
+  async handleFileSelect(file) {
     if (!file) return;
 
     // 验证文件类型
@@ -115,6 +123,25 @@ export class PhotoUploader {
     // 验证文件大小
     if (file.size > this.options.maxSize) {
       store.showToast('图片过大，请上传小于 4MB 的图片');
+      return;
+    }
+
+    // 验证图片尺寸
+    try {
+      const dimensions = await this.getImageDimensions(file);
+
+      if (dimensions.width < MIN_DIMENSION || dimensions.height < MIN_DIMENSION) {
+        store.showToast(`图片尺寸过小，建议至少 ${MIN_DIMENSION}x${MIN_DIMENSION} 像素`);
+        return;
+      }
+
+      if (dimensions.width > MAX_DIMENSION || dimensions.height > MAX_DIMENSION) {
+        store.showToast(`图片尺寸过大，建议不超过 ${MAX_DIMENSION}x${MAX_DIMENSION} 像素`);
+        return;
+      }
+    } catch (err) {
+      store.showToast('图片读取失败，请重试');
+      console.error('Image dimension check error:', err);
       return;
     }
 
@@ -136,6 +163,28 @@ export class PhotoUploader {
     };
 
     reader.readAsDataURL(file);
+  }
+
+  /**
+   * 获取图片尺寸
+   */
+  getImageDimensions(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve({ width: img.width, height: img.height });
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to load image'));
+      };
+
+      img.src = url;
+    });
   }
 
   clearFile() {

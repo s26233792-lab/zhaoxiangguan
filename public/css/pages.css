@@ -267,6 +267,22 @@
   color: var(--color-text-tertiary);
 }
 
+/* 上传提示区域 */
+.upload-hints {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  text-align: left;
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.upload-hints p {
+  margin: var(--space-xs) 0;
+  line-height: var(--line-height-normal);
+}
+
 .upload-preview {
   position: relative;
   width: 100%;
