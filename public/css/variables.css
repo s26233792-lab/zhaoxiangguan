@@ -1,53 +1,80 @@
 /**
- * CSS 变量 - 现代简约风格
+ * CSS 变量 - 现代简约风格 (Apple/Notion inspired)
  */
 :root {
-  /* ==================== 色彩系统 ==================== */
+  /* ==================== 主色调优化 ==================== */
+  /* iOS风格蓝色 */
+  --color-primary: #0071e3;
+  --color-primary-dark: #0077ed;
+  --color-primary-light: #2997ff;
 
-  /* 主色调 */
-  --color-primary: #2563eb;
-  --color-primary-dark: #1d4ed8;
-  --color-primary-light: #3b82f6;
+  /* 主色调透明度变体 */
+  --color-primary-alpha-5: rgb(0 113 227 / 0.05);
+  --color-primary-alpha-10: rgb(0 113 227 / 0.1);
+  --color-primary-alpha-20: rgb(0 113 227 / 0.2);
 
-  /* 功能色 */
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: #06b6d4;
-
-  /* 中性色 */
+  /* ==================== 中性色系统优化 ==================== */
+  /* Notion-like暖灰系统 */
   --color-bg: #ffffff;
-  --color-bg-secondary: #f8fafc;
-  --color-bg-tertiary: #f1f5f9;
+  --color-bg-secondary: #f7f6f3;
+  --color-bg-tertiary: #ecebe4;
   --color-surface: #ffffff;
-  --color-border: #e2e8f0;
-  --color-border-dark: #cbd5e1;
+  --color-surface-elevated: #ffffff;
 
-  /* 文字色 */
-  --color-text-primary: #1e293b;
-  --color-text-secondary: #64748b;
-  --color-text-tertiary: #94a3b8;
+  /* 更柔和的边框色 */
+  --color-border: #e9e7e0;
+  --color-border-dark: #d3d1cb;
+  --color-border-light: #f3f2ef;
+
+  /* 文字色 - 更好的对比度和可读性 */
+  --color-text-primary: #191919;
+  --color-text-secondary: #6b6b6b;
+  --color-text-tertiary: #9b9a97;
   --color-text-inverse: #ffffff;
 
-  /* ==================== 阴影 ==================== */
+  /* ==================== 功能色优化 ==================== */
+  /* 成功色 - 更柔和的绿色 */
+  --color-success: #2da44e;
+  --color-success-light: #2c974b;
+  --color-success-bg: rgb(45 164 78 / 0.1);
 
-  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.05);
-  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  /* 警告色 */
+  --color-warning: #d29922;
+  --color-warning-light: #dbab09;
+  --color-warning-bg: rgb(210 153 34 / 0.1);
 
-  /* ==================== 圆角 ==================== */
+  /* 错误色 */
+  --color-error: #cf222e;
+  --color-error-light: #f85149;
+  --color-error-bg: rgb(207 34 46 / 0.1);
 
+  /* 信息色 */
+  --color-info: #0969da;
+  --color-info-light: #218bff;
+  --color-info-bg: rgb(9 105 218 / 0.1);
+
+  /* ==================== 阴影系统优化 ==================== */
+  /* 多层阴影系统，创造深度感 */
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-md: 0 4px 6px rgb(0 0 0 / 0.08), 0 2px 4px rgb(0 0 0 / 0.04);
+  --shadow-lg: 0 10px 15px rgb(0 0 0 / 0.08), 0 4px 6px rgb(0 0 0 / 0.04);
+  --shadow-xl: 0 20px 25px rgb(0 0 0 / 0.1), 0 8px 10px rgb(0 0 0 / 0.04);
+  --shadow-2xl: 0 25px 50px rgb(0 0 0 / 0.15);
+
+  /* 内阴影 - 用于输入框focus状态 */
+  --shadow-inner: inset 0 2px 4px rgb(0 0 0 / 0.04);
+
+  /* ==================== 圆角系统 ==================== */
   --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+  --radius-2xl: 20px;
   --radius-full: 9999px;
 
-  /* ==================== 间距 ==================== */
-
+  /* ==================== 间距系统扩展 ==================== */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
@@ -55,12 +82,15 @@
   --space-xl: 32px;
   --space-2xl: 48px;
   --space-3xl: 64px;
+  --space-4xl: 96px;
+  --space-5xl: 128px;
 
-  /* ==================== 字体 ==================== */
+  /* ==================== 字体系统优化 ==================== */
+  /* 使用系统字体栈，保证在各平台最佳显示 */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-family-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace;
 
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
-
+  /* 更scale的字体大小系统 */
   --font-size-xs: 12px;
   --font-size-sm: 14px;
   --font-size-md: 16px;
@@ -68,50 +98,76 @@
   --font-size-xl: 20px;
   --font-size-2xl: 24px;
   --font-size-3xl: 30px;
+  --font-size-4xl: 36px;
+  --font-size-5xl: 48px;
 
+  /* 字重 */
+  --font-weight-light: 300;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  --line-height-tight: 1.25;
+  /* 行高 */
+  --line-height-tight: 1.2;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
+  --line-height-loose: 2;
 
-  /* ==================== 过渡 ==================== */
+  /* ==================== 过渡动画 ==================== */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
-  --transition-slow: 350ms ease;
+  /* ==================== 布局系统 ==================== */
+  --container-max-width: 1140px;
+  --container-narrow: 800px;
+  --container-wide: 1400px;
 
-  /* ==================== 布局 ==================== */
+  --header-height: 64px;
+  --header-height-mobile: 56px;
 
-  --container-max-width: 1200px;
-  --header-height: 60px;
-  --border-radius: var(--radius-lg);
-
-  /* ==================== Z-index ==================== */
-
+  /* ==================== Z-index层级 ==================== */
+  --z-base: 1;
   --z-dropdown: 100;
-  --z-modal: 200;
-  --z-toast: 300;
-  --z-tooltip: 400;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-tooltip: 700;
+  --z-toast: 800;
+
+  /* ==================== 响应式断点（用于JS） ==================== */
+  --breakpoint-mobile: 375px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-wide: 1280px;
 }
 
 /* ==================== 暗色模式支持 ==================== */
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #0f172a;
-    --color-bg-secondary: #1e293b;
-    --color-bg-tertiary: #334155;
-    --color-surface: #1e293b;
-    --color-border: #334155;
-    --color-border-dark: #475569;
+    --color-bg: #191919;
+    --color-bg-secondary: #202020;
+    --color-bg-tertiary: #2a2a2a;
+    --color-surface: #202020;
+    --color-surface-elevated: #2a2a2a;
 
-    --color-text-primary: #f1f5f9;
-    --color-text-secondary: #94a3b8;
-    --color-text-tertiary: #64748b;
-    --color-text-inverse: #1e293b;
+    --color-border: #3a3a3a;
+    --color-border-dark: #4a4a4a;
+    --color-border-light: #2a2a2a;
+
+    --color-text-primary: #f7f6f3;
+    --color-text-secondary: #9b9a97;
+    --color-text-tertiary: #6b6b6b;
+    --color-text-inverse: #191919;
+
+    --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.2);
+    --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.3), 0 1px 2px rgb(0 0 0 / 0.2);
+    --shadow-md: 0 4px 6px rgb(0 0 0 / 0.3), 0 2px 4px rgb(0 0 0 / 0.2);
+    --shadow-lg: 0 10px 15px rgb(0 0 0 / 0.3), 0 4px 6px rgb(0 0 0 / 0.2);
   }
 }
