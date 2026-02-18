@@ -152,9 +152,9 @@ class ImageService {
       ]
     };
 
-    // 12API使用Gemini端点
+    // 12API使用Gemini端点（URL参数认证）
     const model = config.NANOBANANA_MODEL || 'gemini-3-pro-image-preview';
-    const endpoint = `${config.API_ENDPOINT}/v1beta/models/${model}:generateContent`;
+    const endpoint = `${config.API_ENDPOINT}/v1beta/models/${model}:generateContent?key=${config.API_KEY}`;
 
     logger.info('Calling 12API NanoBanana', {
       endpoint,
@@ -169,7 +169,6 @@ class ImageService {
         requestBody,
         {
           headers: {
-            'Authorization': `Bearer ${config.API_KEY}`,
             'Content-Type': 'application/json',
           },
           responseType: 'arraybuffer',
