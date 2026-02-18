@@ -49,6 +49,7 @@ class ImageService {
         await usageRepository.logGenerateImage(deviceId, { prompt });
 
         await client.query('COMMIT');
+        logger.info('Transaction committed - credits deducted', { deviceId });
 
         logger.info('Image generated successfully', {
           deviceId,
@@ -63,8 +64,9 @@ class ImageService {
       if (deviceId && client) {
         try {
           await client.query('ROLLBACK');
+          logger.info('Transaction rolled back - credits restored', { deviceId, reason: err.message });
         } catch (rollbackErr) {
-          logger.error('Rollback error', rollbackErr);
+          logger.error('Rollback error', { rollbackError: rollbackErr.message, originalError: err.message });
         }
       }
 

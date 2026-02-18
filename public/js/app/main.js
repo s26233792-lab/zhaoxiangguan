@@ -172,6 +172,8 @@ class App {
 
     } catch (err) {
       this.components.resultView.hide();
+      // 重新加载积分，确保显示正确（后端会回滚失败的扣费）
+      await this.loadCredits();
       store.showToast(err.message || '生成失败，请稍后重试', 'error');
     } finally {
       store.setLoading(false);
