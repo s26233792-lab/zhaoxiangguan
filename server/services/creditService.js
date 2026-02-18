@@ -49,10 +49,11 @@ class CreditService {
    * 扣减积分（原子操作）
    * @param {string} deviceId - 设备ID
    * @param {number} amount - 扣减数量
+   * @param {Object} client - 数据库事务客户端（可选）
    * @returns {Promise<number>} 剩余积分
    */
-  async deduct(deviceId, amount = 1) {
-    const remaining = await creditRepository.deduct(deviceId, amount);
+  async deduct(deviceId, amount = 1, client = null) {
+    const remaining = await creditRepository.deduct(deviceId, amount, client);
 
     if (remaining === null) {
       logger.warn('Insufficient credits', { deviceId, amount });

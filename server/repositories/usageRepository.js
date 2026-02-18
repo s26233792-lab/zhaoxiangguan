@@ -10,10 +10,11 @@ class UsageRepository {
    * @param {string} deviceId - 设备ID
    * @param {string} action - 操作类型
    * @param {Object} metadata - 额外信息（JSONB）
+   * @param {Object} client - 数据库事务客户端（可选）
    */
-  async log(deviceId, action, metadata = null) {
-    const pool = getPool();
-    await pool.query(
+  async log(deviceId, action, metadata = null, client = null) {
+    const db = client || getPool();
+    await db.query(
       `INSERT INTO usage_logs (device_id, action, metadata)
        VALUES ($1, $2, $3)`,
       [deviceId, action, metadata]
@@ -33,9 +34,10 @@ class UsageRepository {
    * 记录图片生成
    * @param {string} deviceId - 设备ID
    * @param {Object} metadata - 元数据
+   * @param {Object} client - 数据库事务客户端（可选）
    */
-  async logGenerateImage(deviceId, metadata = {}) {
-    return this.log(deviceId, LOG_ACTIONS.GENERATE_IMAGE, metadata);
+  async logGenerateImage(deviceId, metadata = {}, client = null) {
+    return this.log(deviceId, LOG_ACTIONS.GENERATE_IMAGE, metadata, client);
   }
 
   /**

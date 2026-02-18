@@ -32,7 +32,7 @@ class ImageService {
         await client.query('BEGIN');
 
         // 检查并扣除积分
-        const remaining = await creditService.deduct(deviceId, 1);
+        const remaining = await creditService.deduct(deviceId, 1, client);
 
         if (remaining === null) {
           await client.query('ROLLBACK');
@@ -46,7 +46,7 @@ class ImageService {
       // 提交事务
       if (deviceId && client) {
         // 记录使用日志
-        await usageRepository.logGenerateImage(deviceId, { prompt });
+        await usageRepository.logGenerateImage(deviceId, { prompt }, client);
 
         await client.query('COMMIT');
         logger.info('Transaction committed - credits deducted', { deviceId });
