@@ -155,7 +155,8 @@ class ImageService {
     };
 
     // 12API使用Gemini端点（URL参数认证）
-    const model = config.NANOBANANA_MODEL || 'gemini-3-pro-image-preview';
+    // 注意：使用 -url 后缀的模型是图生图专用模型
+    const model = config.NANOBANANA_MODEL || 'gemini-3-pro-image-preview-url';
     const endpoint = `${config.API_ENDPOINT}/v1beta/models/${model}:generateContent?key=${config.API_KEY}`;
 
     logger.info('Calling 12API NanoBanana', {
@@ -287,9 +288,29 @@ class ImageService {
           response: responseData.substring(0, 1000),
         });
 
-        // 抛出有意义的错误信息
-        const errorMsg = responseData || `HTTP ${error.response.status}`;
-        throw new APIError(`图片生成失败: ${errorMsg.substring(0, 200)}`);
+        // 解析错误响应获取更详细的信息
+        let errorMsg = `HTTP ${error.response.status}`;
+        try {
+          const errorJson = JSON.parse(responseData);
+          if (errorJson.error) {
+            // 处理 503 上游服务高负载错误
+            if (error.response.status === 503) {
+              if (errorJson.error.message) {
+                errorMsg = errorJson.error.message;
+              }
+            } else {
+              errorMsg = errorJson.error.message || errorMsg;
+            }
+          }
+        } catch (e) {
+          errorMsg = responseData.substring(0, 200);
+        }
+
+        // 针对 503 错误的特殊提示
+        if (error.response.status === 503) {
+          throw new APIError(`AI服务当前负载过高，请稍后重试（${errorMsg}）`);
+        }
+        throw new APIError(`图片生成失败: ${errorMsg}`);
 
       } else if (error.request) {
         // 请求已发出但没有收到响应
