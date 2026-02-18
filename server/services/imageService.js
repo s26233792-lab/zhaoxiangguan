@@ -196,26 +196,81 @@ class ImageService {
         firstCandidateKeys: jsonResponse.candidates?.[0] ? Object.keys(jsonResponse.candidates[0]) : [],
       });
 
-      // 提取图片数据
-      if (jsonResponse.candidates &&
-          jsonResponse.candidates[0]?.content?.parts) {
+      // 提取图片数据 - 支持多种响应格式
+      let imageBuffer = null;
+      let extractionMethod = '';
+
+      // 格式1: 标准 Gemini 格式 candidates[0].content.parts[].inline_data.data
+      if (jsonResponse.candidates?.[0]?.content?.parts) {
         for (const part of jsonResponse.candidates[0].content.parts) {
           if (part.inline_data?.data) {
-            // 返回base64图片数据
-            const imageBuffer = Buffer.from(part.inline_data.data, 'base64');
-            logger.info('Image extracted successfully', {
-              bufferSize: imageBuffer.length,
-            });
-            return imageBuffer;
+            imageBuffer = Buffer.from(part.inline_data.data, 'base64');
+            extractionMethod = 'gemini-standard';
+            break;
           }
         }
       }
 
-      // 如果没找到图片，记录更详细的信息
-      logger.error('No image found in response', {
-        fullResponse: JSON.stringify(jsonResponse).substring(0, 1000),
+      // 格式2: 直接在 data 字段（base64字符串）
+      if (!imageBuffer && jsonResponse.data) {
+        try {
+          imageBuffer = Buffer.from(jsonResponse.data, 'base64');
+          extractionMethod = 'direct-data';
+        } catch (e) {
+          logger.warn('Failed to parse data field as base64', { error: e.message });
+        }
+      }
+
+      // 格式3: 在 image 字段（base64字符串）
+      if (!imageBuffer && jsonResponse.image) {
+        try {
+          imageBuffer = Buffer.from(jsonResponse.image, 'base64');
+          extractionMethod = 'image-field';
+        } catch (e) {
+          logger.warn('Failed to parse image field as base64', { error: e.message });
+        }
+      }
+
+      // 格式4: 在 result.image 字段
+      if (!imageBuffer && jsonResponse.result?.image) {
+        try {
+          imageBuffer = Buffer.from(jsonResponse.result.image, 'base64');
+          extractionMethod = 'result-image';
+        } catch (e) {
+          logger.warn('Failed to parse result.image field as base64', { error: e.message });
+        }
+      }
+
+      // 格式5: 在 output.data 字段
+      if (!imageBuffer && jsonResponse.output?.data) {
+        try {
+          imageBuffer = Buffer.from(jsonResponse.output.data, 'base64');
+          extractionMethod = 'output-data';
+        } catch (e) {
+          logger.warn('Failed to parse output.data field as base64', { error: e.message });
+        }
+      }
+
+      // 如果找到图片，返回
+      if (imageBuffer && imageBuffer.length > 0) {
+        logger.info('Image extracted successfully', {
+          bufferSize: imageBuffer.length,
+          method: extractionMethod,
+        });
+        return imageBuffer;
+      }
+
+      // 如果没找到图片，记录更详细的信息用于调试
+      logger.error('No image found in any expected format', {
+        responseKeys: Object.keys(jsonResponse),
+        hasCandidates: !!jsonResponse.candidates,
+        hasData: !!jsonResponse.data,
+        hasImage: !!jsonResponse.image,
+        hasResult: !!jsonResponse.result,
+        hasOutput: !!jsonResponse.output,
+        fullResponse: JSON.stringify(jsonResponse).substring(0, 2000),
       });
-      throw new APIError('API返回数据中没有找到图片');
+      throw new APIError('API返回数据中没有找到图片，响应格式可能已变更');
 
     } catch (error) {
       // 详细记录axios错误
